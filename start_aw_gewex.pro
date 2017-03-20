@@ -23,8 +23,8 @@ pro start_aw_gewex, year, which = which, list = list, modis = modis, aatsr = aat
 				clock = TIC('"which = ' + which[wh]+'"')
 				obj.set_which, which[wh]
 				obj.create_l3_all
-; 				obj.create_rel
-; 				obj.histogram
+				obj.create_rel
+				obj.histogram
 				TOC, clock
 			endfor
 		endfor
