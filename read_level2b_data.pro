@@ -1,9 +1,12 @@
 
-function read_level2b_data, file, node=node, variables=variables, found=found
+function read_level2b_data, file, node=node, variables=variables, found=found,$
+							unit_scale = unit_scale	; this does not overwrite the scale_factor of the ncdf input file 
+													; this adds a second scale to the data after scaling and offseting
+													; e.g, when the unit of data needs to be adapted (CTH: m -> km, scale_unit = 0.001 )
 
 	dprd   = keyword_set(day_products)
 	vn     = keyword_set(variables) ? strlowcase(variables)	: ['ctp','cot','cer','cph','cth','cee','ctt','cmask','cwp','illum']
-	nod    = keyword_set(node) 	? strlowcase(node[0]) 	: 'asc'
+	nod    = keyword_set(node) 	? strlowcase(node[0]) 		: 'asc'
 	fileID = ncdf_open(file)
 
 	found  = 0
@@ -21,10 +24,11 @@ function read_level2b_data, file, node=node, variables=variables, found=found
 			endelse
 			idx  = where(dummy eq fillv[0], n_miss)
 			data = dummy * float(scale[0]) + float(offset[0])
+			if keyword_set(unit_scale) then data = data * unit_scale[0]
 			if n_miss gt 0 then data[idx] = -999.
 
 			case vn[dd] of
-				'illum'	: struct = n_elements(struct) eq 0 ? {illum:temporary(data)}	: create_struct(struct,'illum',temporary(data))
+				'illum'	: struct = n_elements(struct) eq 0 ? {illum:temporary(data)}: create_struct(struct,'illum',temporary(data))
 				'ctp' 	: struct = n_elements(struct) eq 0 ? {ctp:temporary(data)}	: create_struct(struct,'ctp',temporary(data))
 				'cot' 	: struct = n_elements(struct) eq 0 ? {cod:temporary(data)}	: create_struct(struct,'cod',temporary(data))
 				'cer' 	: struct = n_elements(struct) eq 0 ? {ref:temporary(data)}	: create_struct(struct,'ref',temporary(data))

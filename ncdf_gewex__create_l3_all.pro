@@ -21,7 +21,7 @@ PRO ncdf_gewex::create_l3_all
 	month   = 12l
 	nlon    = long(360./self.resolution)
 	nlat    = long(180./self.resolution)
-	MISSING = self.missing_value 
+	MISSING = self.missing_value[0]
 
 	; coordinate variable arrays creation :
 	dlon = findgen(nlon) - (180.0 - self.resolution/2.)
@@ -53,11 +53,11 @@ PRO ncdf_gewex::create_l3_all
 			data_prd = binvar.remove(prd)
 
 			if not first_month_flag.hasKey(prd) then begin
-	
+
 				bins = (*self.product_info).bins
 				nbin = n_elements(bins) - 1
 
-				nchisto_tmp   = make_array([nlon,nlat,nbin,month],/INTEGER,VALUE=0)
+				nchisto_tmp   = make_array([nlon,nlat,nbin,month],/LONG,VALUE=0l)
 				ncdtot_tmp    = make_array([nlon,nlat,month],/FLOAT,VALUE=MISSING)
 				ncdvar_m_tmp  = make_array([nlon,nlat,month],/FLOAT,VALUE=MISSING)
 				ncdvar_n_tmp  = make_array([nlon,nlat,month],/FLOAT,VALUE=MISSING)

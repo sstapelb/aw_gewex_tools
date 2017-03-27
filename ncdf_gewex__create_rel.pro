@@ -32,7 +32,7 @@ PRO ncdf_gewex::create_rel
 	month   = 12l
 	nlon    = long(360./self.resolution)
 	nlat    = long(180./self.resolution)
-	MISSING = self.missing_value 
+	MISSING = self.missing_value[0]
 
 	; coordinate variable arrays creation :
 	dlon = findgen(nlon) - (180.0 - self.resolution/2.)

@@ -11,10 +11,9 @@ FUNCTION ncdf_gewex::extract_all_data, file, node = node
 	unit=''
 	name=''
 	data=-1.
-	MISSING = self.missing_value 
+	MISSING = self.missing_value[0] 
 	error=''
 
-; 	IF (self.which_file EQ '1330') THEN day_prd = 1
 	; now day products are always processed except for '0130' and '1930', define otherwise at ncdf_gewex::update in ncdf_gewex__define.pro
 	day_prd  = self.process_day_prds or self.process_day_prds_only
 

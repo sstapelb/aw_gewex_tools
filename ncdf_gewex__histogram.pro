@@ -57,8 +57,6 @@ PRO ncdf_gewex::histogram
 				sdd      = string(dd,format='(i2.2)')
 				dum_file = syy+smm+sdd+'-ESACCI-L3U_CLOUD-CLD_PRODUCTS-'+self.satnames[sat_idx] +'-f'+self.version+'.nc'
 				file_cld = file_search(self.fullpath+syy+'/'+smm+'/'+dum_file, count=count_file)
-				; if not found then do recursive search, this might take a while. 
-; 				if count_file eq 0 and self.satnames[sat_idx] ne 'nnn' then file_cld = file_search(self.fullpath, dum_file, count=count_file)
 
 				FOR ff = 0, count_file -1 DO BEGIN
 					clock = tic(string(dd,f='(i3.3)')+' '+file_cld[ff])

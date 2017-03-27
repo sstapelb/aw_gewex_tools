@@ -441,7 +441,7 @@ FUNCTION ncdf_gewex::init ,algo = algo, modis = modis, aatsr = aatsr, atsr2 = at
 	self.missing_value = -999.
 	; ---
 
-	self.oContainer = obj_new('mgs_container')
+; 	self.oContainer = obj_new('mgs_container') ; residual
 	self.famec      = keyword_set(famec)
 	self.modis      = keyword_set(modis)
 	self.aatsr      = keyword_set(aatsr)
@@ -456,23 +456,23 @@ FUNCTION ncdf_gewex::init ,algo = algo, modis = modis, aatsr = aatsr, atsr2 = at
 	if self.aatsr then apx_dir = 'AATSR/'
 	if self.atsr2 then apx_dir = 'ATSR2/'
 	self.inpath  = '/cmsaf/cmsaf-cld7/esa_cloud_cci/data/v2.0/L3U/'
-	self.outpath = '/cmsaf/cmsaf-cld7/esa_cloud_cci/data/v2.0/gewex/new_cp_and_ct_histos/'+apx_dir
+	self.outpath = '/cmsaf/cmsaf-cld8/sstapelb/gewex/'+apx_dir
 	; ---
 
 	self.prd_list = PTR_NEW(['CA','CAH','CAM','CAL','CAW','CAI','CAIH' $
-					,'CAE','CAEH','CAEM','CAEL','CAEW','CAEI','CAEIH' $
-					,'CAHR','CAMR','CALR','CAWR','CAIR','CAIHR','CAWDR','CAIDR' $
-					,'CT','CTH','CTM','CTL','CTW','CTI','CTIH' $
-					,'CP','CZ' $
-					,'CEM','CEMH','CEMM','CEML','CEMW','CEMI','CEMIH' $
-					,'COD','CODH','CODM','CODL','CODW','CODI','CODIH' $
-					,'CLWP','CIWP','CIWPH' $
-; 					,'ALWP','AIWP','AIWPH' $
-					,'CREW','CREI','CREIH','CAD','CAWD','CAID']   )
-	self.day_prd_list     = PTR_NEW(['COD','CODH','CODM','CODL','CODW','CODI','CODIH' $
-					,'CLWP','CIWP','CIWPH','CREW','CREI','CREIH','CAD','CAWD','CAID'])
-	self.hist_prd_list    = PTR_NEW(['COD_CP','CEM_CP','CEMI_CREI','CODW_CREW','CODI_CREI'])
-	self.which_file_list  = 	['ampm','am','pm','0130','0730','1330','1930']
+							,'CAE','CAEH','CAEM','CAEL','CAEW','CAEI','CAEIH' $
+							,'CAHR','CAMR','CALR','CAWR','CAIR','CAIHR','CAWDR','CAIDR' $
+							,'CT','CTH','CTM','CTL','CTW','CTI','CTIH' $
+							,'CP','CZ' $
+							,'CEM','CEMH','CEMM','CEML','CEMW','CEMI','CEMIH' $
+							,'COD','CODH','CODM','CODL','CODW','CODI','CODIH' $
+							,'CLWP','CIWP','CIWPH' $
+; 							,'ALWP','AIWP','AIWPH' $
+							,'CREW','CREI','CREIH','CAD','CAWD','CAID']   )
+	self.day_prd_list 	= PTR_NEW(['COD','CODH','CODM','CODL','CODW','CODI','CODIH' $
+							,'CLWP','CIWP','CIWPH','CREW','CREI','CREIH','CAD','CAWD','CAID'])
+	self.hist_prd_list	= PTR_NEW(['COD_CP','CEM_CP','CEMI_CREI','CODW_CREW','CODI_CREI'])
+	self.which_file_list= ['ampm','am','pm','0130','0730','1330','1930']
 
 	self.resolution = 1. ; output resolution in degree (equal array)
 	self.file = PTR_NEW('no_file')
@@ -525,6 +525,6 @@ PRO  ncdf_gewex__define
 	  , hist_prd_list: ptr_new() $
 	  , day_prd_list : ptr_new() $
 	  , resolution : 1. $
-	  , oContainer : obj_new() $
+; 	  , oContainer : obj_new() $
         }
 END

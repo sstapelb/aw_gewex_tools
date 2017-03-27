@@ -278,8 +278,9 @@ PRO ncdf_gewex::update_product
 			long_name ='Cloud Top Pressure'
 			unit ='hPa'
 			references = 'Pavalonis & Heidinger 2004 (TO CHECK)'
-			bins = 100 + (findgen(11) * 100)
-; 			bins = [10.,180.,310.,440.,560.,680.,800.,1100.]
+			bins = 100 + (findgen(11) * 100) ;official Gewex bins make sure you use this one
+; 			bins = [10.,180.,310.,440.,560.,680.,800.,1100.] ; for testing only same bins as used for COT_CTP hist2d 
+; 			bins = [1.,90.,180.,245.,310.,375.,440.,500.,560.,620.,680.,740.,800.,875.,950.,1100.] ; for testing only same bins as used in hist1d_ctp in official cci l3c files
 			mini=10
 			maxi=1100
 		END

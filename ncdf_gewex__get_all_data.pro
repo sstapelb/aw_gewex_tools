@@ -19,7 +19,7 @@ FUNCTION ncdf_gewex::get_all_data, month
 
 	nodes 		= *self.nodes
 	count_nodes	= n_elements(nodes)
-	MISSING		= self.missing_value 
+	MISSING		= self.missing_value[0]
 
 	nlon  = long(360./self.resolution)
 	nlat  = long(180./self.resolution)
@@ -29,16 +29,11 @@ FUNCTION ncdf_gewex::get_all_data, month
 
 	; stapel changed to cci naming convention, here you should not need to change anything 
 	; otherwise check self.satnames or if filenames are cci convention
-	dum_file_am = 	yy+mm+'??-ESACCI-L3U_CLOUD-CLD_PRODUCTS-'+self.satnames[0] +'-f'+self.version+'.nc'
-	; Check your path here
-	; Note if no files are found the file search will be done recursively , this can 
-	; take very much longer depending in how many subdirectories you have
+	; Update (stapel 03/2017) if no files are found the program stops recursive file search is turned off, just takes too long
+	dum_file_am = yy+mm+'??-ESACCI-L3U_CLOUD-CLD_PRODUCTS-'+self.satnames[0] +'-f'+self.version+'.nc'
 	file_am = file_search(self.fullpath+yy+'/'+mm+'/'+dum_file_am, count=count_file_am)
-	if count_file_am eq 0 and self.satnames[0] ne 'nnn' then file_am = file_search(self.fullpath, dum_file_am,count=count_file_am)
-
 	dum_file_pm = yy+mm+'??-ESACCI-L3U_CLOUD-CLD_PRODUCTS-'+self.satnames[1] +'-f'+self.version+'.nc'
 	file_pm = file_search(self.fullpath+yy+'/'+mm+'/'+dum_file_pm, count=count_file_pm)
-	if count_file_pm eq 0 and self.satnames[1] ne 'nnn' then file_pm = file_search(self.fullpath, dum_file_pm,count=count_file_pm)
 
 	; stapel changed because because zerolength strings have been counted too
 	; -> n_elements(self.file) > count_file
@@ -80,18 +75,18 @@ FUNCTION ncdf_gewex::get_all_data, month
 				data  = data_hash.remove(prd)
 
 				;--average---------------
-				if day_mean.haskey(prd) eq 0 then day_mean[prd]= make_array([nlon,nlat,count_nodes*count_file], value = MISSING)
+				if day_mean.haskey(prd) eq 0 then day_mean[prd]= make_array([nlon,nlat,count_nodes*count_file], value = MISSING,/float)
 				;------------------------
 
 				;--histograms------------
 				self.set_product,prd
 				bins   = (*self.product_info).bins
 				n_bins = n_elements(bins)
-				if day_hist.haskey(prd) eq 0 then day_hist[prd]= make_array([nlon,nlat,n_bins-1,count_nodes*count_file], value = 0)
+				if day_hist.haskey(prd) eq 0 then day_hist[prd]= make_array([nlon,nlat,n_bins-1,count_nodes*count_file], value = 0,/long)
 				;------------------------
 
 				;--spatial-variance------
-; 				if day_vari.haskey(prd) eq 0 then day_vari[prd]= make_array([nlon,nlat,count_nodes*count_file], value = MISSING)
+; 				if day_vari.haskey(prd) eq 0 then day_vari[prd]= make_array([nlon,nlat,count_nodes*count_file], value = MISSING,/float)
 				;------------------------
 
 				idx = where(data GE 0,c_idx)
@@ -145,14 +140,14 @@ FUNCTION ncdf_gewex::get_all_data, month
 					; stapel 11/2013 email CS ; all CTP, CTT values lower 100 hpa/150K into first bin
 					dd     = ( (i_his eq 0) and ( prd eq 'CP' or prd eq 'CT') )
 					hh_dum =  between(data, (dd ? 0:bins[i_his]), bins[i_his+1],not_include_upper=(i_his ne (n_bins -2)))
-					dum[*,*,i_his,i_count] += ulong(product(size(hh_dum,/dim)/float([nlon,nlat])) * rebin(float(hh_dum),nlon,nlat))
+					dum[*,*,i_his,i_count] = long(product(size(hh_dum,/dim)/float([nlon,nlat])) * rebin(float(hh_dum),nlon,nlat))
 				Endfor
 				day_hist[prd] = temporary(dum)
 			endforeach
 			undefine,ca_avg
 			undefine,data_hash
 			i_count++
-		endfor ; ; loop over i nodes 
+		endfor ; ; loop over i nodes
 		toc, clock
 	endfor ; loop over i files l2b
 
@@ -183,7 +178,7 @@ FUNCTION ncdf_gewex::get_all_data, month
 		; STDD 1)
 		; this is the intra monthly stddev of already spatial averaged values
 		; not sure if this is what they want?
-		; first delog cod's
+		; first unlog cod's
 		if total(prd eq all_cod_products) eq 1 then day_mean_tmp = exp(day_mean_tmp-10.)
 		res_sdev = stddev(day_mean_tmp,dim=3,/NAN)
 		idx_nan  = where(finite(res_sdev,/NAN),idx_nancnt)
