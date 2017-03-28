@@ -179,10 +179,10 @@ PRO ncdf_gewex::update_year
 ; 			2014: self.year_info = PTR_NEW(define_year_info ('metopb','noaa-19',1B,1B,1B,1B,1B,1B,1B))
 ; 			2015: self.year_info = PTR_NEW(define_year_info ('metopb','noaa-19',1B,1B,1B,1B,1B,1B,1B))
 ; 			2016: self.year_info = PTR_NEW(define_year_info ('metopb','noaa-19',1B,1B,1B,1B,1B,1B,1B))
-			2013: self.year_info = PTR_NEW(define_year_info ('metopa','noaa-19',1B,1B,1B,1B,1B,1B,1B)) ; cci decision take MA instaead of MB
-			2014: self.year_info = PTR_NEW(define_year_info ('metopa','noaa-19',1B,1B,1B,1B,1B,1B,1B)) ; cci decision take MA instaead of MB
-			2015: self.year_info = PTR_NEW(define_year_info ('metopa','noaa-19',1B,1B,1B,1B,1B,1B,1B)) ; cci decision take MA instaead of MB
-			2016: self.year_info = PTR_NEW(define_year_info ('metopa','noaa-19',1B,1B,1B,1B,1B,1B,1B)) ; cci decision take MA instaead of MB
+			2013: self.year_info = PTR_NEW(define_year_info ('metopa','noaa-19',1B,1B,1B,1B,1B,1B,1B)) ; cci decision take MA instead of MB
+			2014: self.year_info = PTR_NEW(define_year_info ('metopa','noaa-19',1B,1B,1B,1B,1B,1B,1B)) ; cci decision take MA instead of MB
+			2015: self.year_info = PTR_NEW(define_year_info ('metopa','noaa-19',1B,1B,1B,1B,1B,1B,1B)) ; cci decision take MA instead of MB
+			2016: self.year_info = PTR_NEW(define_year_info ('metopa','noaa-19',1B,1B,1B,1B,1B,1B,1B)) ; cci decision take MA instead of MB
 		ENDCASE
 	endelse
 END
@@ -441,7 +441,6 @@ FUNCTION ncdf_gewex::init ,algo = algo, modis = modis, aatsr = aatsr, atsr2 = at
 	self.missing_value = -999.
 	; ---
 
-; 	self.oContainer = obj_new('mgs_container') ; residual
 	self.famec      = keyword_set(famec)
 	self.modis      = keyword_set(modis)
 	self.aatsr      = keyword_set(aatsr)
@@ -525,6 +524,5 @@ PRO  ncdf_gewex__define
 	  , hist_prd_list: ptr_new() $
 	  , day_prd_list : ptr_new() $
 	  , resolution : 1. $
-; 	  , oContainer : obj_new() $
         }
 END

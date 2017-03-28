@@ -28,8 +28,8 @@ FUNCTION ncdf_gewex::get_all_data, month
 	mm = string(self.month,format='(i2.2)')
 
 	; stapel changed to cci naming convention, here you should not need to change anything 
-	; otherwise check self.satnames or if filenames are cci convention
-	; Update (stapel 03/2017) if no files are found the program stops recursive file search is turned off, just takes too long
+	; otherwise check self.satnames or the cci convention for filenames
+	; Update (stapel 03/2017) if no files are found the program stops. Recursive file search is turned off!
 	dum_file_am = yy+mm+'??-ESACCI-L3U_CLOUD-CLD_PRODUCTS-'+self.satnames[0] +'-f'+self.version+'.nc'
 	file_am = file_search(self.fullpath+yy+'/'+mm+'/'+dum_file_am, count=count_file_am)
 	dum_file_pm = yy+mm+'??-ESACCI-L3U_CLOUD-CLD_PRODUCTS-'+self.satnames[1] +'-f'+self.version+'.nc'
@@ -66,6 +66,7 @@ FUNCTION ncdf_gewex::get_all_data, month
 		if (*self.file)[i_file] eq '' then continue
 		clock = tic(string(i_file,f='(i3.3)')+' '+(*self.file)[i_file])
 		for i_node = 0,count_nodes-1 do begin ; loop over nodes
+
 			; read data from level 2b files
 			data_hash = self-> extract_all_data((*self.file)[i_file],node = nodes[i_node])
 			prd_list  = data_hash.keys()
@@ -93,17 +94,17 @@ FUNCTION ncdf_gewex::get_all_data, month
 				if c_idx le 1  then continue
 				dum      = day_mean[prd]
 				avg_all  = rebin(double(data),nlon,nlat)
-; 				avg_all2 = rebin(double(data^2),nlon,nlat)
+; 				avg_all2 = rebin(double(data^2),nlon,nlat) ; only needed for spatial variance
 				if total(data eq MISSING) ne 0 then begin
 					N        = product(size(data,/dim)/(float([nlon,nlat])))
 					anz_fv   = round(rebin(double(data eq MISSING),nlon,nlat) * N)
-					tot_fv   = anz_fv * (MISSING)
+					tot_fv   = anz_fv * double(MISSING)
 					divisor  = double( N - anz_fv)
 					fvidx    = where(anz_fv eq N,fvcnt)
-					if fvcnt gt 0 then divisor[fvidx] = 1.
-; 					sum2_all = ( temporary(avg_all2) * N - anz_fv * (MISSING)^2. )
+					if fvcnt gt 0 then divisor[fvidx] = 1d
+; 					sum2_all = ( temporary(avg_all2) * N - anz_fv * (MISSING)^2. ) ; only needed for spatial variance
 					avg_all  = ( avg_all * N - temporary(tot_fv) ) / divisor
-					avg_all  = float(avg_all)
+					avg_all  = float(avg_all > 0d) ; "> 0d" removes arithm. imprecisions that should be zero; should be safe for all gewex vars 
 					if fvcnt gt 0 then avg_all[fvidx] = MISSING
 				endif
 
@@ -129,7 +130,7 @@ FUNCTION ncdf_gewex::get_all_data, month
 
 				;--------
 				if total(prd eq all_cod_products) eq 1 then begin
-					; all cod product values are logarithmic, but the bins are not
+					; all cod product values are logarithmic, but the bins are not -> unlog
 					idx = where(data ne MISSING,idxcnt)
 					if idxcnt gt 0 then data[idx] = exp(data[idx]-10.)
 				endif

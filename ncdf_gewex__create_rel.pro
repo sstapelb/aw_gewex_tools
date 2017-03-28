@@ -58,8 +58,7 @@ PRO ncdf_gewex::create_rel
 	caw  = self._get_data('CAW')
 	cai  = self._get_data('CAI')
 	caih = self._get_data('CAIH')
-	if day_prd then cawd = self._get_data('CAWD')
-	if day_prd then caid = self._get_data('CAID')
+	if day_prd then cad = self._get_data('CAD')
 
 	; data['CAHR']  = 100.* cah.(3)/FLOAT((cal.(3)+cam.(3)+cah.(3)))
 	; data['CAMR']  = 100.* cam.(3)/FLOAT((cal.(3)+cam.(3)+cah.(3)))
@@ -74,9 +73,11 @@ PRO ncdf_gewex::create_rel
 	;     the problem was that caw and cai were wrong defined in extract_all_data 
 	;   - checking now for missing values
 
-	; sum1    = FLOAT(cal+cam+cah) 
+	; sum0, sum1 and sum2 should be (are!) identical same for cawd+caid and cad
+	; sum0 = FLOAT(cal+cam+cah)
+	; sum2 = float(caw+cai)
 	sum1 = float(ca)
-	sum2 = float(caw+cai)
+
 	dum = 100. * cah / sum1
 		dumidx = where(cah lt 0. or sum1 le 0.,dumidxcnt)
 		if dumidxcnt gt 0 then dum[dumidx] = MISSING
@@ -89,26 +90,27 @@ PRO ncdf_gewex::create_rel
 		dumidx = where(cal lt 0. or sum1 le 0.,dumidxcnt)
 		if dumidxcnt gt 0 then dum[dumidx] = MISSING
 	data['CALR'] = dum
-	dum = 100. * caw / sum2
-		dumidx = where(cai lt 0. or caw lt 0. or sum2 eq 0.,dumidxcnt)
+	dum = 100. * caw / sum1
+		dumidx = where(cai lt 0. or caw lt 0. or sum1 eq 0.,dumidxcnt)
 		if dumidxcnt gt 0 then dum[dumidx] = MISSING
 	data['CAWR'] = dum
-	dum = 100. * cai / sum2
-		dumidx = where(cai lt 0. or caw lt 0. or sum2 eq 0.,dumidxcnt)
+	dum = 100. * cai / sum1
+		dumidx = where(cai lt 0. or caw lt 0. or sum1 eq 0.,dumidxcnt)
 		if dumidxcnt gt 0 then dum[dumidx] = MISSING
 	data['CAIR'] = dum
-	dum = 100. * caih / sum2
-		dumidx = where(caih lt 0. or sum2 le 0.,dumidxcnt)
+	dum = 100. * caih / sum1
+		dumidx = where(caih lt 0. or sum1 le 0.,dumidxcnt)
 		if dumidxcnt gt 0 then dum[dumidx] = MISSING
 	data['CAIHR'] = dum
 	if day_prd then begin
-		sum3 = float(cawd+caid)
+; 		sum3 = float(cawd+caid)
+		sum3 = float(cad)
 		dum  = 100. * cawd / sum3
-			dumidx = where(caid lt 0. or cawd lt 0. or sum3 eq 0.,dumidxcnt)
+			dumidx = where(caid lt 0. or cawd lt 0. or sum3 le 0.,dumidxcnt)
 			if dumidxcnt gt 0 then dum[dumidx] = MISSING
 		data['CAWDR'] = dum
 		dum  = 100. * caid / sum3
-			dumidx = where(caid lt 0. or cawd lt 0. or sum3 eq 0.,dumidxcnt)
+			dumidx = where(caid lt 0. or cawd lt 0. or sum3 le 0.,dumidxcnt)
 			if dumidxcnt gt 0 then dum[dumidx] = MISSING
 		data['CAIDR'] = dum
 	endif

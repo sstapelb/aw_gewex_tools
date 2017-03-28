@@ -8,13 +8,8 @@
 ;
 FUNCTION ncdf_gewex::extract_all_data, file, node = node
 
-	unit=''
-	name=''
-	data=-1.
-	MISSING = self.missing_value[0] 
-	error=''
-
-	; now day products are always processed except for '0130' and '1930', define otherwise at ncdf_gewex::update in ncdf_gewex__define.pro
+	; now day products are always processed except for '0130' and '1930'
+	; define otherwise at ncdf_gewex::update in ncdf_gewex__define.pro
 	day_prd  = self.process_day_prds or self.process_day_prds_only
 
 	if day_prd eq 0 then variables = ['ctp','cph','cth','cee','ctt','cmask']
@@ -22,6 +17,7 @@ FUNCTION ncdf_gewex::extract_all_data, file, node = node
 
 	nlon = long(360./self.resolution)
 	nlat = long(180./self.resolution)
+	MISSING = self.missing_value[0] 
 
 	out  = orderedhash()
 
@@ -107,42 +103,42 @@ FUNCTION ncdf_gewex::extract_all_data, file, node = node
 
 		;'CTH':
 		val  = ct  * ctp_h
-		bad  = val le 0
+		bad  = val le 0.
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
 		out['CTH'] = data
 
 		;'CTM':
 		val  = ct  * ctp_m
-		bad  = val le 0
+		bad  = val le 0.
 		good = bad eq 0
 		data = val * good  + bad * MISSING
 		out['CTM'] = data
 
 		;'CTL':
 		val  = ct  * ctp_l
-		bad  = val le 0
+		bad  = val le 0.
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
 		out['CTL'] = data
 
 		;'CTW':
 		val  = ct * cph_w
-		bad  = val le 0 
+		bad  = val le 0. 
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
 		out['CTW'] = data
 
 		;'CTI':
 		val  = ct * cph_i
-		bad  = val le 0 
+		bad  = val le 0. 
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
 		out['CTI'] = data
 
 		;'CTIH':
 		val  = ct * cph_i * ctp_h
-		bad  = val le 0 
+		bad  = val le 0.
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
 		out['CTIH'] = data
@@ -246,15 +242,15 @@ FUNCTION ncdf_gewex::extract_all_data, file, node = node
 		out['CAEW'] = data
 
 		; 'CAEI'
-		val  = (cem > 0) * cph_i
-		bad  =  cem eq -999 or (ca eq -999.) OR  ((cph eq -999.) and (ca ge 0.5))
+		val  = (cem > 0.) * cph_i
+		bad  = (cem eq -999.) or (ca eq -999.) OR  ((cph eq -999.) and (ca ge 0.5))
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
 		out['CAEI'] = data
 
 		; 'CAEIH'
-		val  = (cem > 0) * cph_i * ctp_l
-		bad  = cem eq -999 or (ca eq -999.) OR  ((cph eq -999.) and (ca ge 0.5)) OR ((ctp EQ -999.) AND ( ca ge 0.5)) 
+		val  = (cem > 0.) * cph_i * ctp_l
+		bad  = (cem eq -999.) or (ca eq -999.) OR  ((cph eq -999.) and (ca ge 0.5)) OR ((ctp EQ -999.) AND ( ca ge 0.5)) 
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
 		out['CAEIH'] = data
@@ -293,7 +289,7 @@ FUNCTION ncdf_gewex::extract_all_data, file, node = node
 
 		;'CODH':
 		val  = cod * ctp_h
-		bad  = val le 0
+		bad  = val le 0.
 		val  = alog(val>1e-15) + 10.
 		good = bad eq 0
 		data = val * good  + bad * MISSING
@@ -301,7 +297,7 @@ FUNCTION ncdf_gewex::extract_all_data, file, node = node
 
 		;'CODM':
 		val  = cod * ctp_m
-		bad  = val le 0
+		bad  = val le 0.
 		val  = alog(val>1e-15) + 10.
 		good = bad eq 0
 		data = val * good  + bad * MISSING
@@ -309,7 +305,7 @@ FUNCTION ncdf_gewex::extract_all_data, file, node = node
 
 		;'CODL':
 		val  = cod * ctp_l
-		bad  = val le 0
+		bad  = val le 0.
 		val  = alog(val>1e-15) + 10.
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
@@ -317,7 +313,7 @@ FUNCTION ncdf_gewex::extract_all_data, file, node = node
 
 		;'CODW':
  		val  = cod * cph_w
-		bad  = val le 0
+		bad  = val le 0.
 		val  = alog(val>1e-15) + 10.
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
@@ -325,7 +321,7 @@ FUNCTION ncdf_gewex::extract_all_data, file, node = node
 
 		;'CODI':
 		val  = cod * cph_i
-		bad  = val le 0
+		bad  = val le 0.
 		val  = alog(val>1e-15) + 10.
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
@@ -333,7 +329,7 @@ FUNCTION ncdf_gewex::extract_all_data, file, node = node
 
 		;'CODIH':
 		val  = cod * cph_i * ctp_h
-		bad  = val le 0
+		bad  = val le 0.
 		val  = alog(val>1e-15) + 10.
 		good = bad eq 0
 		data = val * good  + bad * MISSING 

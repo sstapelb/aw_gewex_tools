@@ -2,7 +2,7 @@
 function read_level2b_data, file, node=node, variables=variables, found=found,$
 							unit_scale = unit_scale	; this does not overwrite the scale_factor of the ncdf input file 
 													; this adds a second scale to the data after scaling and offseting
-													; e.g, when the unit of data needs to be adapted (CTH: m -> km, scale_unit = 0.001 )
+													; e.g, when the unit of data needs to be adapted (CTH: m -> km, unit_scale = 0.001 )
 
 	dprd   = keyword_set(day_products)
 	vn     = keyword_set(variables) ? strlowcase(variables)	: ['ctp','cot','cer','cph','cth','cee','ctt','cmask','cwp','illum']

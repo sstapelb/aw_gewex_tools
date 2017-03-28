@@ -41,7 +41,10 @@ PRO ncdf_gewex::histogram
 		bin_bounds  = transpose([[(info1.bins)[0:nbin-1 ]],[(info1.bins)[1:*]]])
 		bin2_bounds = transpose([[(info2.bins)[0:nbin2-1]],[(info2.bins)[1:*]]])
 
-		nc2histo = Ulonarr(nlon,nlat,nbin,nbin2,month)
+		nc2histo    = Ulonarr(nlon,nlat,nbin,nbin2,month)
+		var_names   = [info1.cci_name,info2.cci_name]
+		IF total(last_letter EQ ['w','i']) GT 0 THEN var_names = [var_names,'cph']
+		Nvars       = n_elements(var_names)
 
 		FOR mm = 1 , month Do Begin 
 
@@ -61,8 +64,6 @@ PRO ncdf_gewex::histogram
 				FOR ff = 0, count_file -1 DO BEGIN
 					clock = tic(string(dd,f='(i3.3)')+' '+file_cld[ff])
 					for i_node = 0,count_nodes-1 do begin
-						var_names = [info1.cci_name,info2.cci_name]
-						IF total(last_letter EQ ['w','i']) GT 0 THEN var_names = [var_names,'cph']
 						; create var struct
 						struc = read_level2b_data(file_cld[ff],variables = var_names, found = found, node=nodes[i_node])
 						; if not all variables found then do nothing
@@ -71,8 +72,8 @@ PRO ncdf_gewex::histogram
 						prop1   = struc.(0)
 						prop2   = struc.(1)
 						IF total(last_letter EQ ['w','i']) GT 0 THEN BEGIN
-							phase = last_letter EQ 'w' ? ( struc.(2) eq 1 ) : ( struc.(2) eq 2 )
-						ENDIF else phase = byte(prop1) * 0b + 1b
+							phase = ( struc.(2) eq (last_letter EQ 'w' ? 1 : 2) )
+						ENDIF else phase = ( byte(prop1) * 0b + 1b )
 
 						FOR pp1 = 0,nbin-1 DO BEGIN
 							FOR pp2 = 0,nbin2-1 DO BEGIN
