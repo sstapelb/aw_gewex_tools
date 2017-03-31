@@ -7,13 +7,12 @@ PRO ncdf_gewex::histogram
 		return
 	endif
 
-	; No histograms for night nodes ('0130','1930'); if necassary AMPM can be created as sum of 'AM' and 'PM'!
+	; Decision; No histograms will be processed for night-only nodes (which_file: '0130','1930')
+	; Also no AMPM will be created, you can sum up "AM"+"PM" to get "AMPM"
 	if ~total(self.which_file eq ['1330','0730','am','pm']) then begin
 		print,"ncdf_gewex::histogram    : Histograms will only be processed for which= ['1330','0730','AM','PM']!"
 		return
 	endif
-
-	sat_idx = (self.which_file eq '1330' or self.which_file eq 'pm')
 
 	month = 12l
 	nlon  = long(360./self.resolution)
@@ -30,7 +29,7 @@ PRO ncdf_gewex::histogram
 	prd_list = *self.hist_prd_list
 
 	foreach prd,prd_list do begin
-		combi       = strsplit(prd,'_',/ext)  
+		combi       = strsplit(prd,'_',/ext)
 		last_letter = strlowcase(strmid(combi[0],0,1,/re))
 		info1       = self.histogram_info(combi[0])
 		info2       = self.histogram_info(combi[1])
@@ -44,54 +43,45 @@ PRO ncdf_gewex::histogram
 		nc2histo    = Ulonarr(nlon,nlat,nbin,nbin2,month)
 		var_names   = [info1.cci_name,info2.cci_name]
 		IF total(last_letter EQ ['w','i']) GT 0 THEN var_names = [var_names,'cph']
-		Nvars       = n_elements(var_names)
 
-		FOR mm = 1 , month Do Begin 
+		FOR mm = 1 , month Do Begin
 
 			self -> set_month,mm
-			dom = julday(mm+1,1,self.year)-julday(mm,1,self.year)
-			syy = string(self.year ,format='(i4.4)')
-			smm = string(mm,format='(i2.2)')
 
-			print,syy+' '+themonths(mm)+' '+prd+' "'+strupcase(self.which_file)+'"'
+			print,string(self.year,format='(i4.4)')+' '+themonths(self.month)+' '+prd+' "'+strupcase(self.which_file)+'"'
 
-			FOR dd = 1, dom DO BEGIN
+			file_cld = self.get_l2b_files(count_file = count_file)
 
-				sdd      = string(dd,format='(i2.2)')
-				dum_file = syy+smm+sdd+'-ESACCI-L3U_CLOUD-CLD_PRODUCTS-'+self.satnames[sat_idx] +'-f'+self.version+'.nc'
-				file_cld = file_search(self.fullpath+syy+'/'+smm+'/'+dum_file, count=count_file)
+			FOR ff = 0, count_file -1 DO BEGIN
+				clock = tic(string(ff,f='(i3.3)')+' '+file_cld[ff])
+				for i_node = 0,count_nodes-1 do begin
+					; create var struct
+					struc = self.read_level2b_data(file_cld[ff],variables = var_names, found = found, node=nodes[i_node])
+					; if not all variables found then do nothing
+					if ~found then continue
+					; read vars from struct use same order as in var_names
+					prop1   = struc.(0)
+					prop2   = struc.(1)
+					IF total(last_letter EQ ['w','i']) GT 0 THEN BEGIN
+						phase = ( struc.(2) eq (last_letter EQ 'w' ? 1 : 2) )
+					ENDIF else phase = ( byte(prop1) * 0b + 1b )
 
-				FOR ff = 0, count_file -1 DO BEGIN
-					clock = tic(string(dd,f='(i3.3)')+' '+file_cld[ff])
-					for i_node = 0,count_nodes-1 do begin
-						; create var struct
-						struc = read_level2b_data(file_cld[ff],variables = var_names, found = found, node=nodes[i_node])
-						; if not all variables found then do nothing
-						if ~found then continue
-						; read vars from struct use same order as in var_names
-						prop1   = struc.(0)
-						prop2   = struc.(1)
-						IF total(last_letter EQ ['w','i']) GT 0 THEN BEGIN
-							phase = ( struc.(2) eq (last_letter EQ 'w' ? 1 : 2) )
-						ENDIF else phase = ( byte(prop1) * 0b + 1b )
-
-						FOR pp1 = 0,nbin-1 DO BEGIN
-							FOR pp2 = 0,nbin2-1 DO BEGIN
-								dum =  between(prop1,info1.bins[pp1], info1.bins[pp1+1]) $
-										AND   between(prop2,info2.bins[pp2], info2.bins[pp2+1]) $
-										AND (phase eq 1b)
-								nc2histo[*,*,pp1,pp2,mm-1] += ulong(product(size(dum,/dim)/float([nlon,nlat])) * rebin(float(dum),nlon,nlat))
-							Endfor ; pp2
-						Endfor ; pp1
-					endfor ; nodes
-					toc, clock
-				endfor ;file per day
-			endfor ; day
+					FOR pp1 = 0,nbin-1 DO BEGIN
+						FOR pp2 = 0,nbin2-1 DO BEGIN
+							dum =  between(prop1,info1.bins[pp1], info1.bins[pp1+1]) $
+									AND   between(prop2,info2.bins[pp2], info2.bins[pp2+1]) $
+									AND (phase eq 1b)
+							nc2histo[*,*,pp1,pp2,mm-1] += ulong(product(size(dum,/dim)/float([nlon,nlat])) * rebin(float(dum),nlon,nlat))
+						Endfor ; pp2
+					Endfor ; pp1
+				endfor ; nodes
+				toc, clock
+			endfor ;files
 		ENDFOR ; month
 
 		; stapel changed to cci, removed HIST_2D from filename (email CS ) 
 		ncfile = self.outpath+string(self.year,format='(i4.4)')+'/'+ prd + $
-			 self.outfile +string(self.year,format='(i4.4)')+'.nc'
+				 self.outfile+string(self.year,format='(i4.4)')+'.nc'
 
 		FILE_MKDIR,file_dirname(ncfile)
 
@@ -166,11 +156,7 @@ PRO ncdf_gewex::histogram
 		; ------------------------
 		NCDF_ATTPUT,idout,'Conventions','CF-1.6',/GLOBAL,/CHAR
 		NCDF_ATTPUT,idout,'title',info1.long_name+' ' +info2.long_name+' PDF (GEWEX)',/GLOBAL,/CHAR
-		platform = self.satellite
-		idx = where(self.satnames ne 'nnn',cnt)
-		if cnt gt 0 then platform = platform[idx]
-		platform = strcompress(strjoin(strupcase(platform),','),/rem)
-		NCDF_ATTPUT,idout,'platform',platform,/GLOBAL,/CHAR
+		NCDF_ATTPUT,idout,'platform',self.platform,/GLOBAL,/CHAR
 		NCDF_ATTPUT,idout,'sensor',self.sensor,/GLOBAL,/CHAR
 		NCDF_ATTPUT,idout,'climatology',self.climatology+' '+self.version,/GLOBAL,/CHAR
 		NCDF_ATTPUT,idout,'grid_resolution_in_degrees','1x1 deg',/GLOBAL,/CHAR

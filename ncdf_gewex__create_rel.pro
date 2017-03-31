@@ -26,7 +26,8 @@ PRO ncdf_gewex::create_rel
 		RETURN
 	ENDIF
 
-	day_prd  = self.process_day_prds
+	incl_day  = self.process_day_prds
+	proc_list = strupcase(*self.rel_prd_list)
 
 	; coordinate variable dimensions :
 	month   = 12l
@@ -39,81 +40,38 @@ PRO ncdf_gewex::create_rel
 	dlat = findgen(nlat) - ( 90.0 - self.resolution/2.)
 	dtim = findgen(month)
 
-	; Sample data Reading (only monthly mean, this part has to be adapted)
-	; -------------------
-	ncdtot   = hash()
-	ncdvar_m = hash()
-	ncdvar_s = hash()
-	nchisto  = hash()
-
-	first_month_flag = hash()
-
 	data = hash()
 
-	ca   = self._get_data('CA',error = error)
-	if error eq 1 then return
-	cah  = self._get_data('CAH')
-	cam  = self._get_data('CAM')
-	cal  = self._get_data('CAL')
-	caw  = self._get_data('CAW')
-	cai  = self._get_data('CAI')
-	caih = self._get_data('CAIH')
-	if day_prd then cad = self._get_data('CAD')
-
-	; data['CAHR']  = 100.* cah.(3)/FLOAT((cal.(3)+cam.(3)+cah.(3)))
-	; data['CAMR']  = 100.* cam.(3)/FLOAT((cal.(3)+cam.(3)+cah.(3)))
-	; data['CALR']  = 100.* cal.(3)/FLOAT((cal.(3)+cam.(3)+cah.(3)))
-	; data['CAWR']  = 100.* caw.(3)/FLOAT((caw.(3)+cai.(3)))
-	; data['CAIR']  = 100.* cai.(3)/FLOAT((caw.(3)+cai.(3)))
-	; data['CAIHR'] = 100.* caih.(3)/FLOAT(cal.(3)+cam.(3)+cah.(3))
-
-	; stapel changed 01/2014
-	;   - sum1 should be equal to ca!
-	;   - sum2 had almost only values of 1
-	;     the problem was that caw and cai were wrong defined in extract_all_data 
-	;   - checking now for missing values
-
-	; sum0, sum1 and sum2 should be (are!) identical same for cawd+caid and cad
+	; sum0, sum1 and ca should be (are!) identical, same for cawd+caid and cad
 	; sum0 = FLOAT(cal+cam+cah)
-	; sum2 = float(caw+cai)
-	sum1 = float(ca)
-
-	dum = 100. * cah / sum1
-		dumidx = where(cah lt 0. or sum1 le 0.,dumidxcnt)
-		if dumidxcnt gt 0 then dum[dumidx] = MISSING
-	data['CAHR'] = dum
-	dum = 100. * cam / sum1
-		dumidx = where(cam lt 0. or sum1 le 0.,dumidxcnt)
-		if dumidxcnt gt 0 then dum[dumidx] = MISSING
-	data['CAMR'] = dum
-	dum = 100. * cal / sum1
-		dumidx = where(cal lt 0. or sum1 le 0.,dumidxcnt)
-		if dumidxcnt gt 0 then dum[dumidx] = MISSING
-	data['CALR'] = dum
-	dum = 100. * caw / sum1
-		dumidx = where(cai lt 0. or caw lt 0. or sum1 eq 0.,dumidxcnt)
-		if dumidxcnt gt 0 then dum[dumidx] = MISSING
-	data['CAWR'] = dum
-	dum = 100. * cai / sum1
-		dumidx = where(cai lt 0. or caw lt 0. or sum1 eq 0.,dumidxcnt)
-		if dumidxcnt gt 0 then dum[dumidx] = MISSING
-	data['CAIR'] = dum
-	dum = 100. * caih / sum1
-		dumidx = where(caih lt 0. or sum1 le 0.,dumidxcnt)
-		if dumidxcnt gt 0 then dum[dumidx] = MISSING
-	data['CAIHR'] = dum
-	if day_prd then begin
-; 		sum3 = float(cawd+caid)
-		sum3 = float(cad)
-		dum  = 100. * cawd / sum3
-			dumidx = where(caid lt 0. or cawd lt 0. or sum3 le 0.,dumidxcnt)
-			if dumidxcnt gt 0 then dum[dumidx] = MISSING
-		data['CAWDR'] = dum
-		dum  = 100. * caid / sum3
-			dumidx = where(caid lt 0. or cawd lt 0. or sum3 le 0.,dumidxcnt)
-			if dumidxcnt gt 0 then dum[dumidx] = MISSING
-		data['CAIDR'] = dum
-	endif
+	; sum1 = float(caw+cai)
+	foreach prd, proc_list do begin
+		if total(prd eq ['CAWDR','CAIDR']) then begin ; day products
+			if incl_day eq 0 then continue
+			if n_elements(cad) eq 0 then begin
+				cad = self._get_data('CAD',error = error)
+				if error eq 1 then begin
+					undefine, cad
+					continue
+				endif else sum = float(cad)
+			endif else sum = float(cad)
+		endif else begin
+			if n_elements(ca) eq 0 then begin
+				ca   = self._get_data('CA',error = error)
+				if error eq 1 then begin
+					undefine, ca
+					continue
+				endif else sum = float(ca)
+			endif else sum = float(ca)
+		endelse
+		raw  = self._get_data(strmid(prd,0,strlen(prd)-1),error = error)
+		if error eq 0 then begin
+			dumidx = where(raw lt 0. or sum le 0.,dumidxcnt,complement=gidx,ncomplement=gidxcnt)
+			rel = raw * 0. + MISSING
+			if gidxcnt gt 0 then rel[gidx] = 100. * raw[gidx] / sum[gidx]
+			data[prd] = rel
+		endif
+	endforeach
 
 	prd_list = data.keys()
 
@@ -192,17 +150,13 @@ PRO ncdf_gewex::create_rel
 
 		NCDF_ATTPUT,idout,'Conventions','CF-1.6',/GLOBAL,/CHAR
 		NCDF_ATTPUT,idout,'title',(*self.product_info).long_name+' (GEWEX)',/GLOBAL,/CHAR
-		platform = self.satellite
-		idx = where(self.satnames ne 'nnn',cnt)
-		if cnt gt 0 then platform = platform[idx]
-		platform = strcompress(strjoin(strupcase(platform),','),/rem)
-		NCDF_ATTPUT,idout,'platform',platform,/GLOBAL,/CHAR
+		NCDF_ATTPUT,idout,'platform',self.platform,/GLOBAL,/CHAR
 		NCDF_ATTPUT,idout,'sensor',self.sensor,/GLOBAL,/CHAR
-		NCDF_ATTPUT,idout,'climatoloy','ESA Cloud_cci v2.0',/GLOBAL,/CHAR
+		NCDF_ATTPUT,idout,'climatology',self.climatology+' '+self.version,/GLOBAL,/CHAR
 		NCDF_ATTPUT,idout,'grid_resolution_in_degrees','1x1 deg',/GLOBAL,/CHAR
-		NCDF_ATTPUT,idout,'contact','contact.cloudcci@dwd.de',/GLOBAL,/CHAR
+		NCDF_ATTPUT,idout,'contact',self.contact,/GLOBAL,/CHAR
 		NCDF_ATTPUT,idout,'history',systime()+' : Generation by '+username[0]+'  on '+hostname[0],/GLOBAL,/CHAR
-		NCDF_ATTPUT,idout,'institution','Deutscher Wetterdienst',/GLOBAL,/CHAR
+		NCDF_ATTPUT,idout,'institution',self.institution,/GLOBAL,/CHAR
 		NCDF_ATTPUT,idout,'time_coverage_duration','P12M',/GLOBAL,/CHAR
 		NCDF_ATTPUT,idout,'time_coverage_resolution','P1M',/GLOBAL,/CHAR
 		NCDF_ATTPUT,idout,'time_coverage_start',string(self.year,format='(i4.4)')+'0101',/GLOBAL,/CHAR

@@ -239,11 +239,7 @@ PRO ncdf_gewex::create_l3_all
 
 		NCDF_ATTPUT,idout,'Conventions','CF-1.6',/GLOBAL,/CHAR
 		NCDF_ATTPUT,idout,'title',title,/GLOBAL,/CHAR
-		platform = self.satellite
-		idx = where(self.satnames ne 'nnn',cnt)
-		if cnt gt 0 then platform = platform[idx]
-		platform = strcompress(strjoin(strupcase(platform),','),/rem)
-		NCDF_ATTPUT,idout,'platform',platform,/GLOBAL,/CHAR
+		NCDF_ATTPUT,idout,'platform',self.platform,/GLOBAL,/CHAR
 		NCDF_ATTPUT,idout,'sensor',self.sensor,/GLOBAL,/CHAR
 		NCDF_ATTPUT,idout,'climatology',self.climatology+' '+self.version,/GLOBAL,/CHAR
 		NCDF_ATTPUT,idout,'grid_resolution_in_degrees','1x1 deg',/GLOBAL,/CHAR

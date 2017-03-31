@@ -10,10 +10,8 @@ FUNCTION ncdf_gewex::extract_all_data, file, node = node
 
 	; now day products are always processed except for '0130' and '1930'
 	; define otherwise at ncdf_gewex::update in ncdf_gewex__define.pro
-	day_prd  = self.process_day_prds or self.process_day_prds_only
-
-	if day_prd eq 0 then variables = ['ctp','cph','cth','cee','ctt','cmask']
-	if self.process_day_prds_only then variables = ['ctp','cot','cer','cph','cmask','cwp','illum']
+	incl_day  = self.process_day_prds
+	proc_list = strupcase(*self.all_prd_list)
 
 	nlon = long(360./self.resolution)
 	nlat = long(180./self.resolution)
@@ -21,234 +19,309 @@ FUNCTION ncdf_gewex::extract_all_data, file, node = node
 
 	out  = orderedhash()
 
-	l2b_data = read_level2b_data(file, node = node, variables = variables)
-	ca  = l2b_data.ca
-	ctp = l2b_data.ctp
-	cph = l2b_data.cph
-	if ~self.process_day_prds_only then cth = l2b_data.cz
-	if ~self.process_day_prds_only then cem = l2b_data.cem
-	if ~self.process_day_prds_only then ct  = l2b_data.ct
- 	if day_prd then cod   = l2b_data.cod
-	if day_prd then ref   = l2b_data.ref
-	if day_prd then cwp   = l2b_data.cwp
-	if day_prd then illum = l2b_data.illum
+	variables = self.get_l2b_varnames(proc_list, incl_day_products = incl_day, found = found_vars)
+	if found_vars eq 0 then begin
+		print, 'ncdf_gewex::extract_all_data: No variable names found check product list!'
+		return, out
+	endif
+	l2b_data = self.read_level2b_data(file, node = node, variables = variables,found = found_all)
+	if not found_all then begin
+		print, 	' ncdf_gewex::extract_all_data: Not all defined variable names could be read! Check "self.all_prd_list" and "get_l2b_varnames"!'
+		stop
+	endif
+	if total(tag_names(l2b_data) eq 'CA') 	 then ca    = l2b_data.ca
+	if total(tag_names(l2b_data) eq 'CTP') 	 then ctp   = l2b_data.ctp
+	if total(tag_names(l2b_data) eq 'CPH') 	 then cph   = l2b_data.cph
+	if total(tag_names(l2b_data) eq 'CZ') 	 then cth   = l2b_data.cz
+	if total(tag_names(l2b_data) eq 'CEM') 	 then cem   = l2b_data.cem
+	if total(tag_names(l2b_data) eq 'CT') 	 then ct    = l2b_data.ct
+	if total(tag_names(l2b_data) eq 'COD') 	 then cod   = l2b_data.cod
+	if total(tag_names(l2b_data) eq 'REF') 	 then ref   = l2b_data.ref
+	if total(tag_names(l2b_data) eq 'CWP') 	 then cwp   = l2b_data.cwp
+	if total(tag_names(l2b_data) eq 'ILLUM') then illum = l2b_data.illum
+	if total(tag_names(l2b_data) eq 'SUNZA') then sunza = l2b_data.sunza
+	undefine, l2b_data
+	if ( incl_day and is_defined(sunza) and (self.algo eq 'CLARA_A2') ) then begin
+		illum = byte(sunza * 0) + 255b
+		illum[WHERE(between(sunza, 0., 75.,/not_include_upper))] = 1	; Day
+		illum[WHERE(between(sunza,75., 95.,/not_include_upper))] = 2	; Twilight
+		illum[WHERE(between(sunza,95.,180.))] = 3						; Night
+		undefine, sunza
+	endif
 
 	; height levels as mask
-	ctp_l = between(ctp,680,1050)
-	ctp_m = between(ctp,440,680,/not_include_upper)
-	ctp_h = between(ctp,000,440,/not_include_upper)
+	if n_elements(ctp) ne 0 then ctp_l = between(ctp,680.,1100.)
+	if n_elements(ctp) ne 0 then ctp_m = between(ctp,440., 680.,/not_include_upper)
+	if n_elements(ctp) ne 0 then ctp_h = between(ctp,  0., 440.,/not_include_upper)
 
 	; phase as mask (water and ice)
 	; stapel cci cph has 0,1,2 := clear,liquid,ice
-	cph_w = cph eq 1
-	cph_i = cph eq 2
+	if n_elements(cph) ne 0 then cph_w = cph eq 1
+	if n_elements(cph) ne 0 then cph_i = cph eq 2
 
-	if not self.process_day_prds_only then begin
-
-		; 'CA'
+	; 'CA'
+	if total(proc_list eq 'CA') then begin
 		val  = ca ge 0.5
 		bad  = ca eq -999.
 		good = bad eq 0
 		data = val * good  + bad * MISSING
 		out['CA'] = data
+	endif
 
-		; 'CAH'
+	; 'CAH'
+	if total(proc_list eq 'CAH') then begin
 		val  = (ca ge 0.5) * ctp_h
 		bad  = (ca eq -999.) OR ((ctp EQ -999.) AND ( ca ge 0.5))
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
 		out['CAH'] = data
+	endif
 
-		; 'CAM'
+	; 'CAM'
+	if total(proc_list eq 'CAM') then begin
 		val  = (ca ge 0.5) * ctp_m
 		bad  = (ca eq -999.) OR ((ctp EQ -999.) AND ( ca ge 0.5))
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
 		out['CAM'] = data  
+	endif
 
-		; 'CAL'
+	; 'CAL'
+	if total(proc_list eq 'CAL') then begin
 		val  = (ca ge 0.5) * ctp_l
 		bad  = (ca eq -999.) OR ((ctp EQ -999.) AND ( ca ge 0.5))
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
 		out['CAL'] = data
+	endif
 
-		; 'CAW'
+	; 'CAW'
+	if total(proc_list eq 'CAW') then begin
 		val  = (ca ge 0.5) * cph_w
 		bad  = (ca eq -999.) OR ((cph EQ -999.) AND ( ca ge 0.5))
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
 		out['CAW'] = data
+	endif
 
-		; 'CAI'
+	; 'CAI'
+	if total(proc_list eq 'CAI') then begin
 		val  = (ca ge 0.5) * cph_i
 		bad  = (ca eq -999.) OR ((cph EQ -999.) AND ( ca ge 0.5))
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
 		out['CAI'] = data
+	endif
 
-		; 'CAIH'
+	; 'CAIH'
+	if total(proc_list eq 'CAIH') then begin
 		val  = (ca ge 0.5) * cph_i * ctp_h
 		bad  = (ca eq -999.) OR ((ctp EQ -999.) AND ( ca ge 0.5)) or ((cph EQ -999.) AND ( ca ge 0.5))
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
 		out['CAIH'] = data
+	endif
 
-		;'CT':
+	;'CT':
+	if total(proc_list eq 'CT') then begin
 		val  = ct
 		bad  = ct eq -999.
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
 		out['CT'] = data
+	endif
 
-		;'CTH':
+	;'CTH':
+	if total(proc_list eq 'CTH') then begin
 		val  = ct  * ctp_h
 		bad  = val le 0.
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
 		out['CTH'] = data
+	endif
 
-		;'CTM':
+	;'CTM':
+	if total(proc_list eq 'CTM') then begin
 		val  = ct  * ctp_m
 		bad  = val le 0.
 		good = bad eq 0
 		data = val * good  + bad * MISSING
 		out['CTM'] = data
+	endif
 
-		;'CTL':
+	;'CTL':
+	if total(proc_list eq 'CTL') then begin
 		val  = ct  * ctp_l
 		bad  = val le 0.
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
 		out['CTL'] = data
+	endif
 
-		;'CTW':
+	;'CTW':
+	if total(proc_list eq 'CTW') then begin
 		val  = ct * cph_w
 		bad  = val le 0. 
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
 		out['CTW'] = data
+	endif
 
-		;'CTI':
+	;'CTI':
+	if total(proc_list eq 'CTI') then begin
 		val  = ct * cph_i
 		bad  = val le 0. 
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
 		out['CTI'] = data
+	endif
 
-		;'CTIH':
+	;'CTIH':
+	if total(proc_list eq 'CTIH') then begin
 		val  = ct * cph_i * ctp_h
 		bad  = val le 0.
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
 		out['CTIH'] = data
+	endif
 
-		;'CP':
+	;'CP':
+	if total(proc_list eq 'CP') then begin
 		val  = ctp
 		bad  = val eq -999.
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
 		out['CP'] = data
+	endif
 
-		;'CZ':
+	;'CZ':
+	if total(proc_list eq 'CZ') then begin
 		val  = cth
 		bad  = val eq -999.
 		good = bad eq 0
 		data = val * good  + bad * MISSING
 		out['CZ'] = data
+	endif
 
-		;'CEM':
+	;'CEM':
+	if total(proc_list eq 'CEM') then begin
 		val  = cem
 		bad  = cem eq -999.
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
 		out['CEM'] = data
+	endif
 
-		;'CEMH':
+	;'CEMH':
+	if total(proc_list eq 'CEMH') then begin
 		val  = cem * ctp_h
 		bad  = (cem eq -999.) or (ctp_h eq 0)
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
 		out['CEMH'] = data
+	endif
 
-		;'CEMM':
+	;'CEMM':
+	if total(proc_list eq 'CEMM') then begin
 		val  = cem * ctp_m
 		bad  = (cem eq -999.) or (ctp_m eq 0)
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
 		out['CEMM'] = data
+	endif
 
-		;'CEML':
+	;'CEML':
+	if total(proc_list eq 'CEML') then begin
 		val  = cem * ctp_l
 		bad  = (cem eq -999.) or (ctp_l eq 0)
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
 		out['CEML'] = data
+	endif
 
-		;'CEMW':
+	;'CEMW':
+	if total(proc_list eq 'CEMW') then begin
 		val  = cem * cph_w
 		bad  = (cem eq -999.) or (cph_w eq 0)
 		good = bad eq 0
 		data = val * good  + bad * MISSING
 		out['CEMW'] = data
+	endif
 
-		;'CEMI':
+	;'CEMI':
+	if total(proc_list eq 'CEMI') then begin
 		val  = cem * cph_i
 		bad  = (cem eq -999.) or (cph_i eq 0)
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
 		out['CEMI'] = data
+	endif
 
-		;'CEMIH':
+	;'CEMIH':
+	if total(proc_list eq 'CEMIH') then begin
 		val  = cem * cph_i * ctp_h
 		bad  = (cem eq -999.) or (cph_i eq 0) or (ctp_h eq 0)
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
 		out['CEMIH'] = data
+	endif
 
-		; 'CAE'
+	; 'CAE'
+	if total(proc_list eq 'CAE') then begin
 		val  = cem
 		bad  = (cem eq -999.) or (ca EQ -999.)
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
 		out['CAE'] = data
+	endif
 
-		; 'CAEH'
+	; 'CAEH'
+	if total(proc_list eq 'CAEH') then begin
 		val  = cem * ctp_h
 		bad  = (cem eq -999.) or (ca EQ -999.)  OR ((ctp EQ -999.) AND ( ca ge 0.5))
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
 		out['CAEH'] = data
+	endif
 
-		; 'CAEM'
+	; 'CAEM'
+	if total(proc_list eq 'CAEM') then begin
 		val  = cem * ctp_m
 		bad  = (cem eq -999.) or (ca EQ -999.)  OR ((ctp EQ -999.) AND ( ca ge 0.5))
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
 		out['CAEM'] = data
+	endif
 
-		; 'CAEL'
+	; 'CAEL'
+	if total(proc_list eq 'CAEL') then begin
 		val  = cem * ctp_l
 		bad  = (cem eq -999.) or (ca EQ -999.)  OR ((ctp EQ -999.) AND ( ca ge 0.5))
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
 		out['CAEL'] = data
+	endif
 
-		; 'CAEW'
+	; 'CAEW'
+	if total(proc_list eq 'CAEW') then begin
 		val  =  cem  * cph_w
 		bad  = (cem eq -999.) or (ca eq -999.) OR ((cph eq -999.) and (ca ge 0.5))
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
 		out['CAEW'] = data
+	endif
 
-		; 'CAEI'
+	; 'CAEI'
+	if total(proc_list eq 'CAEI') then begin
 		val  = (cem > 0.) * cph_i
 		bad  = (cem eq -999.) or (ca eq -999.) OR  ((cph eq -999.) and (ca ge 0.5))
 		good = bad eq 0
 		data = val * good  + bad * MISSING 
 		out['CAEI'] = data
+	endif
 
-		; 'CAEIH'
+	; 'CAEIH'
+	if total(proc_list eq 'CAEIH') then begin
 		val  = (cem > 0.) * cph_i * ctp_l
 		bad  = (cem eq -999.) or (ca eq -999.) OR  ((cph eq -999.) and (ca ge 0.5)) OR ((ctp EQ -999.) AND ( ca ge 0.5)) 
 		good = bad eq 0
@@ -257,132 +330,164 @@ FUNCTION ncdf_gewex::extract_all_data, file, node = node
 	endif
 
 	; daytime products
- 	if day_prd then begin
+	if incl_day then begin
 		; 'CAD'
-		val  = ca ge 0.5
-		bad  = (ca eq -999.) or ( illum ne 1 )
-		good = bad eq 0
-		data = val * good  + bad * MISSING
-		out['CAD'] = data
+		if total(proc_list eq 'CAD') then begin
+			val  = ca ge 0.5
+			bad  = (ca eq -999.) or ( illum ne 1 )
+			good = bad eq 0
+			data = val * good  + bad * MISSING
+			out['CAD'] = data
+		endif
 
 		; 'CAWD'
-		val  = (ca ge 0.5) * cph_w
-		bad  = (ca eq -999.) OR ((cph EQ -999.) AND ( ca ge 0.5))  or ( illum ne 1 )
-		good = bad eq 0
-		data = val * good  + bad * MISSING
-		out['CAWD'] = data
+		if total(proc_list eq 'CAWD') then begin
+			val  = (ca ge 0.5) * cph_w
+			bad  = (ca eq -999.) OR ((cph EQ -999.) AND ( ca ge 0.5))  or ( illum ne 1 )
+			good = bad eq 0
+			data = val * good  + bad * MISSING
+			out['CAWD'] = data
+		endif
 
 		; 'CAID'
-		val  = (ca ge 0.5) * cph_i
-		bad  = (ca eq -999.) OR ((cph EQ -999.) AND ( ca ge 0.5)) or ( illum ne 1) 
-		good = bad eq 0
-		data = val * good  + bad * MISSING 
-		out['CAID'] = data
+		if total(proc_list eq 'CAID') then begin
+			val  = (ca ge 0.5) * cph_i
+			bad  = (ca eq -999.) OR ((cph EQ -999.) AND ( ca ge 0.5)) or ( illum ne 1) 
+			good = bad eq 0
+			data = val * good  + bad * MISSING 
+			out['CAID'] = data
+		endif
 
 		;'COD': logarithmic space
-		val  = cod
-		bad  = val le 0. ; STAPEL 11/2013 no cod =0 allowed, because of alog
-		val  = alog(val>1e-15) + 10.
-		good = bad eq 0
-		data = val * good  + bad * MISSING
-		out['COD'] = data
+		if total(proc_list eq 'COD') then begin
+			val  = cod
+			bad  = val le 0.  or ( illum ne 1 ); STAPEL 11/2013 no cod =0 allowed, because of alog
+			val  = alog(val>1e-15) + 10.
+			good = bad eq 0
+			data = val * good  + bad * MISSING
+			out['COD'] = data
+		endif
 
 		;'CODH':
-		val  = cod * ctp_h
-		bad  = val le 0.
-		val  = alog(val>1e-15) + 10.
-		good = bad eq 0
-		data = val * good  + bad * MISSING
-		out['CODH'] = data
+		if total(proc_list eq 'CODH') then begin
+			val  = cod * ctp_h
+			bad  = val le 0. or ( illum ne 1 )
+			val  = alog(val>1e-15) + 10.
+			good = bad eq 0
+			data = val * good  + bad * MISSING
+			out['CODH'] = data
+		endif
 
 		;'CODM':
-		val  = cod * ctp_m
-		bad  = val le 0.
-		val  = alog(val>1e-15) + 10.
-		good = bad eq 0
-		data = val * good  + bad * MISSING
-		out['CODM'] = data
+		if total(proc_list eq 'CODM') then begin
+			val  = cod * ctp_m
+			bad  = val le 0. or ( illum ne 1 )
+			val  = alog(val>1e-15) + 10.
+			good = bad eq 0
+			data = val * good  + bad * MISSING
+			out['CODM'] = data
+		endif
 
 		;'CODL':
-		val  = cod * ctp_l
-		bad  = val le 0.
-		val  = alog(val>1e-15) + 10.
-		good = bad eq 0
-		data = val * good  + bad * MISSING 
-		out['CODL'] = data 
+		if total(proc_list eq 'CODL') then begin
+			val  = cod * ctp_l
+			bad  = val le 0. or ( illum ne 1 )
+			val  = alog(val>1e-15) + 10.
+			good = bad eq 0
+			data = val * good  + bad * MISSING 
+			out['CODL'] = data 
+		endif
 
 		;'CODW':
- 		val  = cod * cph_w
-		bad  = val le 0.
-		val  = alog(val>1e-15) + 10.
-		good = bad eq 0
-		data = val * good  + bad * MISSING 
-		out['CODW'] = data 
+		if total(proc_list eq 'CODW') then begin
+			val  = cod * cph_w
+			bad  = val le 0. or ( illum ne 1 )
+			val  = alog(val>1e-15) + 10.
+			good = bad eq 0
+			data = val * good  + bad * MISSING 
+			out['CODW'] = data 
+		endif
 
 		;'CODI':
-		val  = cod * cph_i
-		bad  = val le 0.
-		val  = alog(val>1e-15) + 10.
-		good = bad eq 0
-		data = val * good  + bad * MISSING 
-		out['CODI'] = data 
+		if total(proc_list eq 'CODI') then begin
+			val  = cod * cph_i
+			bad  = val le 0. or ( illum ne 1 )
+			val  = alog(val>1e-15) + 10.
+			good = bad eq 0
+			data = val * good  + bad * MISSING 
+			out['CODI'] = data 
+		endif
 
 		;'CODIH':
-		val  = cod * cph_i * ctp_h
-		bad  = val le 0.
-		val  = alog(val>1e-15) + 10.
-		good = bad eq 0
-		data = val * good  + bad * MISSING 
-		out['CODIH'] = data
+		if total(proc_list eq 'CODIH') then begin
+			val  = cod * cph_i * ctp_h
+			bad  = val le 0. or ( illum ne 1 )
+			val  = alog(val>1e-15) + 10.
+			good = bad eq 0
+			data = val * good  + bad * MISSING 
+			out['CODIH'] = data
+		endif
 
 		;'CLWP':
-; 		val  = (cod>0) * (ref>0) * cph_w * 2./3. * 0.833 ; 0.833
-		val  = cwp * cph_w
-		bad  = (cwp eq -999.) or (cph_w eq 0)
-		good = bad eq 0
-		data = val * good  + bad * MISSING
-		out['CLWP'] = data
+		if total(proc_list eq 'CLWP') then begin
+			; val  = (cod>0) * (ref>0) * cph_w * 2./3. * 0.833 ; 0.833
+			val  = cwp * cph_w
+			bad  = (cwp eq -999.) or (cph_w eq 0) or ( illum ne 1 )
+			good = bad eq 0
+			data = val * good  + bad * MISSING
+			out['CLWP'] = data
+		endif
 
 		;'CIWP':
-		; heymsfield
-; 		val  = cph_i * (((cod>0) ^ (1./0.84))/0.065)
-		val  = cwp * cph_i
-		bad  = (cwp eq -999.) or (cph_i eq 0)
-		good = bad eq 0
-		data = val * good  + bad * MISSING 
-		out['CIWP'] = data
+		if total(proc_list eq 'CIWP') then begin
+			; heymsfield
+			; val  = cph_i * (((cod>0) ^ (1./0.84))/0.065)
+			val  = cwp * cph_i
+			bad  = (cwp eq -999.) or (cph_i eq 0) or ( illum ne 1 )
+			good = bad eq 0
+			data = val * good  + bad * MISSING 
+			out['CIWP'] = data
+		endif
 
 		;'CIWPH':
-; 		val = cph_i * (((cod>0) ^ (1./0.84))/0.065) * ctp_h
-		val  = cwp * cph_i * ctp_h
-		bad  = (cwp eq -999.) or (cph_i eq 0) or (ctp_h eq 0)
-		good = bad eq 0
-		data = val * good  + bad * MISSING
-		out['CIWPH'] = data
+		if total(proc_list eq 'CIWPH') then begin
+			; val = cph_i * (((cod>0) ^ (1./0.84))/0.065) * ctp_h
+			val  = cwp * cph_i * ctp_h
+			bad  = (cwp eq -999.) or (cph_i eq 0) or (ctp_h eq 0) or ( illum ne 1 )
+			good = bad eq 0
+			data = val * good  + bad * MISSING
+			out['CIWPH'] = data
+		endif
 
 		;'CREW':
-		val  = cph_w * ref
-		bad  = (ref eq -999.) OR (cph_w EQ 0)
-		good = bad eq 0
-		data = val * good  + bad * MISSING 
-		out['CREW'] = data
+		if total(proc_list eq 'CREW') then begin
+			val  = cph_w * ref
+			bad  = (ref eq -999.) OR (cph_w EQ 0) or ( illum ne 1 )
+			good = bad eq 0
+			data = val * good  + bad * MISSING 
+			out['CREW'] = data
+		endif
 
 		;'CREI':
-		val  = cph_i * ref
-		; stapel changed from cph_w to cph_i
-		; bad = (ref eq -999.) OR (cph_w EQ 0)
-		bad  = (ref eq -999.) OR (cph_i EQ 0)
-		good = bad eq 0
-		data = val * good  + bad * MISSING
-		out['CREI'] = data
+		if total(proc_list eq 'CREI') then begin
+			val  = cph_i * ref
+			; stapel changed from cph_w to cph_i
+			; bad = (ref eq -999.) OR (cph_w EQ 0)
+			bad  = (ref eq -999.) OR (cph_i EQ 0) or ( illum ne 1 )
+			good = bad eq 0
+			data = val * good  + bad * MISSING
+			out['CREI'] = data
+		endif
 
 		;'CREIH':
-		val  = cph_i * ref * ctp_h
-		bad  = (ref eq -999.) OR (cph_i EQ 0) OR (ctp_h EQ 0)
-		good = bad eq 0
-		data = val * good  + bad * MISSING
-		out['CREIH'] = data
- 	endif
+		if total(proc_list eq 'CREIH') then begin
+			val  = cph_i * ref * ctp_h
+			bad  = (ref eq -999.) OR (cph_i EQ 0) OR (ctp_h EQ 0) or ( illum ne 1 )
+			good = bad eq 0
+			data = val * good  + bad * MISSING
+			out['CREIH'] = data
+		endif
+	endif
 
 	undefine,val
 	undefine,good
