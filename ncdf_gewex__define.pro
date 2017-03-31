@@ -1,10 +1,10 @@
 ;-------------------------------------------------------------------------
-function ncdf_gewex::get_l2b_varnames, product_list, incl_day_products = incl_day_products, found = found
+function ncdf_gewex::get_l2b_varnames, product_list, incl_day_products = incl_day_products, histograms = histograms, found = found
 
 	if n_elements(product_list) eq 0 then return, ['ctp','cot','cer','cph','cth','cee','ctt','cmask','cwp','illum']
 
 	variables = strarr(1)
-	iday      = keyword_set(incl_day_products)
+	iday      = keyword_set(incl_day_products) or keyword_set(histograms)
 	is_clara  = (self.algo eq 'CLARA_A2')
 
 	foreach prd, product_list do begin
@@ -25,9 +25,9 @@ function ncdf_gewex::get_l2b_varnames, product_list, incl_day_products = incl_da
 		if total(prd eq ['CA','CAH','CAM','CAL','CAW','CAI','CAIH','CAE',$
 						 'CAEH','CAEM','CAEL','CAEW','CAEI','CAEIH' ]) 					then variables = [variables,(is_clara ? 'cc_mask':'cmask')]
 		if total(prd eq ['CLWP','CIWP','CIWPH' ])							and iday	then variables = [variables,'cwp']
-		if total(prd eq ['CAD','CAWD','CAID','CLWP','CIWP','CIWPH'		,$
-						 'CREW','CREI','CREIH','COD','CODH','CODM'		,$
-						 'CODL','CODW','CODI','CODIH' ]) 					and iday	then variables = [variables,(is_clara ? 'sunzen':'illum')]
+		if total(prd eq ['CAD','CAWD','CAID','CLWP','CIWP','CIWPH','CODL',$
+						 'CREW','CREI','CREIH','COD','CODH','CODM','CODW',$
+						 'CODI','CODIH' ]) and iday and ~keyword_set(histograms) 		then variables = [variables,(is_clara ? 'sunzen':'illum')]
 	endforeach
 
 	if n_elements(variables) gt 1 then begin

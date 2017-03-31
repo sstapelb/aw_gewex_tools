@@ -41,7 +41,8 @@ PRO ncdf_gewex::histogram
 		bin2_bounds = transpose([[(info2.bins)[0:nbin2-1]],[(info2.bins)[1:*]]])
 
 		nc2histo    = Ulonarr(nlon,nlat,nbin,nbin2,month)
-		var_names   = [info1.cci_name,info2.cci_name]
+
+		var_names = self.get_l2b_varnames(combi,/histograms,found=found_vars)
 		IF total(last_letter EQ ['w','i']) GT 0 THEN var_names = [var_names,'cph']
 
 		FOR mm = 1 , month Do Begin
