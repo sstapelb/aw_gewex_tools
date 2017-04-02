@@ -18,7 +18,7 @@ PRO ncdf_gewex::create_l3_all
 	endif
 
 	; coordinate variable dimensions :
-	month   = 12l
+	nmonth  = 12l
 	nlon    = long(360./self.resolution)
 	nlat    = long(180./self.resolution)
 	MISSING = self.missing_value[0]
@@ -26,7 +26,7 @@ PRO ncdf_gewex::create_l3_all
 	; coordinate variable arrays creation :
 	dlon = findgen(nlon) - (180.0 - self.resolution/2.)
 	dlat = findgen(nlat) - ( 90.0 - self.resolution/2.)
-	dtim = findgen(month)
+	dtim = findgen(nmonth)
 
 	; variable array declarations
 	ncdtot = hash()
@@ -37,7 +37,7 @@ PRO ncdf_gewex::create_l3_all
 	; need a dummy hash to find out which products are generated
 	first_month_flag = hash()
 
-	for imois= 0, month-1 do begin
+	for imois= 0, nmonth-1 do begin
 
 		print,self.product+'  '+themonths(imois+1)+'  "'+self.which_file+'"  '+string(self.year,format='(i4.4)')
 
@@ -57,11 +57,11 @@ PRO ncdf_gewex::create_l3_all
 				bins = (*self.product_info).bins
 				nbin = n_elements(bins) - 1
 
-				nchisto_tmp   = make_array([nlon,nlat,nbin,month],/LONG,VALUE=0l)
-				ncdtot_tmp    = make_array([nlon,nlat,month],/FLOAT,VALUE=MISSING)
-				ncdvar_m_tmp  = make_array([nlon,nlat,month],/FLOAT,VALUE=MISSING)
-				ncdvar_n_tmp  = make_array([nlon,nlat,month],/FLOAT,VALUE=MISSING)
-				ncdvar_s_tmp  = make_array([nlon,nlat,month],/FLOAT,VALUE=MISSING)
+				nchisto_tmp   = make_array([nlon,nlat,nbin,nmonth],/LONG,VALUE=0l)
+				ncdtot_tmp    = make_array([nlon,nlat,nmonth],/FLOAT,VALUE=MISSING)
+				ncdvar_m_tmp  = make_array([nlon,nlat,nmonth],/FLOAT,VALUE=MISSING)
+				ncdvar_n_tmp  = make_array([nlon,nlat,nmonth],/FLOAT,VALUE=MISSING)
+				ncdvar_s_tmp  = make_array([nlon,nlat,nmonth],/FLOAT,VALUE=MISSING)
 
 				ncdtot_tmp[*,*,imois]    = data_prd.n_tot
 				ncdvar_m_tmp[*,*,imois]  = data_prd.a_var

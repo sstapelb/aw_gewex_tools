@@ -30,7 +30,7 @@ PRO ncdf_gewex::create_rel
 	proc_list = strupcase(*self.rel_prd_list)
 
 	; coordinate variable dimensions :
-	month   = 12l
+	nmonth  = 12l
 	nlon    = long(360./self.resolution)
 	nlat    = long(180./self.resolution)
 	MISSING = self.missing_value[0]
@@ -38,7 +38,7 @@ PRO ncdf_gewex::create_rel
 	; coordinate variable arrays creation :
 	dlon = findgen(nlon) - (180.0 - self.resolution/2.)
 	dlat = findgen(nlat) - ( 90.0 - self.resolution/2.)
-	dtim = findgen(month)
+	dtim = findgen(nmonth)
 
 	data = hash()
 

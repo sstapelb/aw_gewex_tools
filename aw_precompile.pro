@@ -4,7 +4,7 @@
 @subtools/undefine.pro
 @subtools/is_defined.pro
 @ncdf_gewex__define.pro
-@ncdf_gewex__read_level2b_data.pro
+@ncdf_gewex__read_l2b_data.pro
 @ncdf_gewex__create_l3_all.pro
 @ncdf_gewex__extract_all_data.pro
 @ncdf_gewex__get_all_data.pro

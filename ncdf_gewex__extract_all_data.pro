@@ -17,47 +17,34 @@ FUNCTION ncdf_gewex::extract_all_data, file, node = node
 	nlat = long(180./self.resolution)
 	MISSING = self.missing_value[0] 
 
-	out  = orderedhash()
+	out  = orderedhash() ; this is important CA needs to be created before all CAE prd
 
-	variables = self.get_l2b_varnames(proc_list, incl_day_products = incl_day, found = found_vars)
-	if found_vars eq 0 then begin
-		print, 'ncdf_gewex::extract_all_data: No variable names found check product list!'
-		return, out
-	endif
-	l2b_data = self.read_level2b_data(file, node = node, variables = variables,found = found_all)
+	l2b_data = self.read_l2b_data(file, node = node, found = found_all)
 	if not found_all then begin
-		print, 	' ncdf_gewex::extract_all_data: Not all defined variable names could be read! Check "self.all_prd_list" and "get_l2b_varnames"!'
+		print,'ncdf_gewex::extract_all_data: Not all defined variable names could be read! Check "self.all_prd_list" and "get_l2b_varnames"!'
 		stop
 	endif
-	if total(tag_names(l2b_data) eq 'CA') 	 then ca    = l2b_data.ca
-	if total(tag_names(l2b_data) eq 'CTP') 	 then ctp   = l2b_data.ctp
-	if total(tag_names(l2b_data) eq 'CPH') 	 then cph   = l2b_data.cph
-	if total(tag_names(l2b_data) eq 'CZ') 	 then cth   = l2b_data.cz
-	if total(tag_names(l2b_data) eq 'CEM') 	 then cem   = l2b_data.cem
-	if total(tag_names(l2b_data) eq 'CT') 	 then ct    = l2b_data.ct
-	if total(tag_names(l2b_data) eq 'COD') 	 then cod   = l2b_data.cod
-	if total(tag_names(l2b_data) eq 'REF') 	 then ref   = l2b_data.ref
-	if total(tag_names(l2b_data) eq 'CWP') 	 then cwp   = l2b_data.cwp
-	if total(tag_names(l2b_data) eq 'ILLUM') then illum = l2b_data.illum
-	if total(tag_names(l2b_data) eq 'SUNZA') then sunza = l2b_data.sunza
-	undefine, l2b_data
-	if ( incl_day and is_defined(sunza) and (self.algo eq 'CLARA_A2') ) then begin
-		illum = byte(sunza * 0) + 255b
-		illum[WHERE(between(sunza, 0., 75.,/not_include_upper))] = 1	; Day
-		illum[WHERE(between(sunza,75., 95.,/not_include_upper))] = 2	; Twilight
-		illum[WHERE(between(sunza,95.,180.))] = 3						; Night
-		undefine, sunza
-	endif
+
+	if l2b_data.haskey('CMASK') then ca    = l2b_data.remove('CMASK')
+	if l2b_data.haskey('CER')	then ref   = l2b_data.remove('CER')
+	if l2b_data.haskey('ILLUM')	then illum = l2b_data.remove('ILLUM')
+	if l2b_data.haskey('CTP')	then ctp   = l2b_data.remove('CTP')
+	if l2b_data.haskey('CTH')	then cth   = l2b_data.remove('CTH')
+	if l2b_data.haskey('CTT')	then ct    = l2b_data.remove('CTT')
+	if l2b_data.haskey('COT')	then cod   = l2b_data.remove('COT')
+	if l2b_data.haskey('CWP')	then cwp   = l2b_data.remove('CWP')
+	if l2b_data.haskey('CPH')	then cph   = l2b_data.remove('CPH')
+	if l2b_data.haskey('CEE')	then cem   = l2b_data.remove('CEE')
 
 	; height levels as mask
-	if n_elements(ctp) ne 0 then ctp_l = between(ctp,680.,1100.)
-	if n_elements(ctp) ne 0 then ctp_m = between(ctp,440., 680.,/not_include_upper)
-	if n_elements(ctp) ne 0 then ctp_h = between(ctp,  0., 440.,/not_include_upper)
+	if is_defined(ctp) then ctp_l = between(ctp,680.,1100.)
+	if is_defined(ctp) then ctp_m = between(ctp,440., 680.,/not_include_upper)
+	if is_defined(ctp) then ctp_h = between(ctp,  0., 440.,/not_include_upper)
 
 	; phase as mask (water and ice)
 	; stapel cci cph has 0,1,2 := clear,liquid,ice
-	if n_elements(cph) ne 0 then cph_w = cph eq 1
-	if n_elements(cph) ne 0 then cph_i = cph eq 2
+	if is_defined(cph) then cph_w = cph eq 1
+	if is_defined(cph) then cph_i = cph eq 2
 
 	; 'CA'
 	if total(proc_list eq 'CA') then begin

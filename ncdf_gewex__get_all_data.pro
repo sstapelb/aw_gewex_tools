@@ -21,7 +21,7 @@ FUNCTION ncdf_gewex::get_all_data, month
 	nlat  		= long(180./self.resolution)
 	use_sp_var  = self.calc_spatial_stdd
 
-	self.file	= ptr_new(self.get_l2b_files(count_file = count_file))
+	self.file	= ptr_new(self.get_l2b_files(count = count_file))
 	if count_file le 1 then return,'no_data'
 
 	day_mean  = hash()
@@ -119,7 +119,7 @@ FUNCTION ncdf_gewex::get_all_data, month
 			undefine,data_hash
 			i_count++
 		endfor ; ; loop over i nodes
-		toc, clock
+ 		toc, clock
 	endfor ; loop over i files l2b
 
 	out_hash = hash()

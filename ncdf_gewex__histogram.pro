@@ -1,4 +1,13 @@
-
+;+
+; :Description:
+;    Describe the procedure.
+;
+;
+;
+;
+;
+; :Author: awalther
+;-
 PRO ncdf_gewex::histogram
 
 	idx_which = where(self.which_file eq self.which_file_list)
@@ -14,14 +23,14 @@ PRO ncdf_gewex::histogram
 		return
 	endif
 
-	month = 12l
-	nlon  = long(360./self.resolution)
-	nlat  = long(180./self.resolution)
+	nmonth = 12l
+	nlon   = long(360./self.resolution)
+	nlat   = long(180./self.resolution)
 
 	; coordinate variable arrays creation :
 	dlon = findgen(nlon) - (180.0 - self.resolution/2.)
 	dlat = findgen(nlat) - ( 90.0 - self.resolution/2.)
-	dtim = findgen(month)
+	dtim = findgen(nmonth)
 
 	nodes 	    = *self.nodes
 	count_nodes = n_elements(nodes)
@@ -40,31 +49,36 @@ PRO ncdf_gewex::histogram
 		bin_bounds  = transpose([[(info1.bins)[0:nbin-1 ]],[(info1.bins)[1:*]]])
 		bin2_bounds = transpose([[(info2.bins)[0:nbin2-1]],[(info2.bins)[1:*]]])
 
-		nc2histo    = Ulonarr(nlon,nlat,nbin,nbin2,month)
+		nc2histo    = Ulonarr(nlon,nlat,nbin,nbin2,nmonth)
 
-		var_names = self.get_l2b_varnames(combi,/histograms,found=found_vars)
-		IF total(last_letter EQ ['w','i']) GT 0 THEN var_names = [var_names,'cph']
+		vars = self.get_l2b_varnames(combi)
+		if vars.haskey('ILLUM') then vars.remove,'ILLUM'
+		if 	(total(vars.haskey([info1.hash_key,info2.hash_key])) ne 2.) or $
+			(total(last_letter EQ ['i','w'] and ~vars.haskey('CPH')) then begin
+			print,'Something went wrong! Check get_l2b_varnames and !'
+			stop
+		endif
 
-		FOR mm = 1 , month Do Begin
+		FOR mm = 1 , nmonth Do Begin
 
 			self -> set_month,mm
 
 			print,string(self.year,format='(i4.4)')+' '+themonths(self.month)+' '+prd+' "'+strupcase(self.which_file)+'"'
 
-			file_cld = self.get_l2b_files(count_file = count_file)
+			file_cld = self.get_l2b_files(count = count_file)
 
 			FOR ff = 0, count_file -1 DO BEGIN
 				clock = tic(string(ff,f='(i3.3)')+' '+file_cld[ff])
 				for i_node = 0,count_nodes-1 do begin
-					; create var struct
-					struc = self.read_level2b_data(file_cld[ff],variables = var_names, found = found, node=nodes[i_node])
+					; get variable hash
+					struc = self.read_l2b_data(file_cld[ff],variables = vars, found = found, node=nodes[i_node])
 					; if not all variables found then do nothing
 					if ~found then continue
-					; read vars from struct use same order as in var_names
-					prop1   = struc.(0)
-					prop2   = struc.(1)
-					IF total(last_letter EQ ['w','i']) GT 0 THEN BEGIN
-						phase = ( struc.(2) eq (last_letter EQ 'w' ? 1 : 2) )
+					; read vars
+					prop1 = struc.remove(info1.hash_key)
+					prop2 = struc.remove(info2.hash_key)
+					IF struc.haskey('CPH') THEN BEGIN
+						phase = ( struc.remove('CPH') eq (last_letter EQ 'w' ? 1 : 2) )
 					ENDIF else phase = ( byte(prop1) * 0b + 1b )
 
 					FOR pp1 = 0,nbin-1 DO BEGIN
@@ -78,7 +92,7 @@ PRO ncdf_gewex::histogram
 				endfor ; nodes
 				toc, clock
 			endfor ;files
-		ENDFOR ; month
+		ENDFOR ; months
 
 		; stapel changed to cci, removed HIST_2D from filename (email CS ) 
 		ncfile = self.outpath+string(self.year,format='(i4.4)')+'/'+ prd + $
