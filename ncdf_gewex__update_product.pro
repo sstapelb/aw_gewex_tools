@@ -451,3 +451,97 @@ PRO ncdf_gewex::update_product
 	} )
 
 END
+;-------------------------------------------------------------------------
+; $Id: ncdf_gewex__define.pro,v 1.3 2012/11/19 01:02:06 awalther Exp $
+
+;+
+; :Description:
+;    Returns a structure of year information
+;
+; :Params:
+;    am
+;    pm
+;    o_ampm
+;    o_am
+;    o_pm
+;    o_0130
+;    o_0730
+;    o_1330
+;    o_1930,optional
+;
+;
+;
+; :Author: awalther
+;-
+function ncdf_gewex::histogram_info, product
+
+	case strlowcase(product) of
+		'cod': begin
+			bins = [0,0.3,1.3,3.6,9.4,23.,60.,1000.]
+			hash_key  = 'COT'
+			long_name = 'Cloud Optical Depth '
+			unit = '1'
+		end
+
+		'codi': begin
+			bins = [0,0.3,1.3,3.6,9.4,23.,60.,1000.]
+			hash_key  = 'COT'
+			long_name = 'Cloud Optical Depth Ice clouds'
+			unit = '1'
+		end
+
+		'codw': begin
+			bins = [0,0.3,1.3,3.6,9.4,23.,60.,1000.]
+			hash_key  = 'COT'
+			long_name = 'Cloud Optical Depth Water clouds'
+			unit='1'
+		end
+		
+		'cp': begin
+			bins = [0,180,310,440,560,680,800,1100]
+			hash_key  = 'CTP'
+			long_name = 'Cloud Top Pressure '
+			unit='hPa'
+		end
+		
+		'cem':begin
+			bins = [0.,0.2,0.4,0.8,0.95,1.]
+			hash_key  = 'CEE'
+			long_name = 'Cloud Emissivity '
+			unit = '1'
+		end
+		
+		'cemi':begin
+			bins = [0.,0.2,0.4,0.8,0.95,1.]
+			hash_key  = 'CEE'
+			long_name = 'Cloud Emissivity Ice '
+			unit='1'
+		end
+		
+		'crew': begin
+			; stapel changed bins according to ref) (see ncdf_gewex__update_product.pro) 
+;			bins=[2.,4.,6.,10.,12.5,15,17.5,20,25,30.]
+			bins=[2.,4.,6.,8.,10.,12.5,15,17.5,20,25,30.]
+			hash_key  = 'CER'
+			long_name = 'Cloud Effective Radius Water Clouds' 
+			unit='um'
+		end
+		
+		'crei': begin
+			; stapel changed bins according to ref) (see ncdf_gewex__update_product.pro) 
+;	 		bins=[5.,10.,20.,40.,60.,80.,100.,150.,300.,1000.]
+			bins= [0,5,10,15,20,25,30,35,40,45,50,55,60,90]
+			hash_key  = 'CER'
+			long_name = 'Cloud Effective Radius Ice Clouds'
+			unit='um'
+		end
+
+	endcase
+
+	return,{  bins : bins		$
+		, hash_key:hash_key	$
+		, long_name : long_name $
+		, unit : unit		$
+		}
+
+end

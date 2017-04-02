@@ -17,7 +17,7 @@ FUNCTION ncdf_gewex::extract_all_data, file, node = node
 	nlat = long(180./self.resolution)
 	MISSING = self.missing_value[0] 
 
-	out  = orderedhash() ; this is important CA needs to be created before all CAE prd
+	out  = orderedhash() ; orderedhash is important! CA needs to be created before all CAE prd
 
 	l2b_data = self.read_l2b_data(file, node = node, found = found_all)
 	if not found_all then begin

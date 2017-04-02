@@ -113,101 +113,6 @@ function ncdf_gewex::get_l2b_files, day = day, recursive = recursive, count = co
 
 end
 ;-------------------------------------------------------------------------
-; $Id: ncdf_gewex__define.pro,v 1.3 2012/11/19 01:02:06 awalther Exp $
-
-;+
-; :Description:
-;    Returns a structure of year information
-;
-; :Params:
-;    am
-;    pm
-;    o_ampm
-;    o_am
-;    o_pm
-;    o_0130
-;    o_0730
-;    o_1330
-;    o_1930,optional
-;
-;
-;
-; :Author: awalther
-;-
-function ncdf_gewex::histogram_info, product
-
-	case strlowcase(product) of
-		'cod': begin
-			bins = [0,0.3,1.3,3.6,9.4,23.,60.,1000.]
-			hash_key  = 'COT'
-			long_name = 'Cloud Optical Depth '
-			unit = '1'
-		end
-
-		'codi': begin
-			bins = [0,0.3,1.3,3.6,9.4,23.,60.,1000.]
-			hash_key  = 'COT'
-			long_name = 'Cloud Optical Depth Ice clouds'
-			unit = '1'
-		end
-
-		'codw': begin
-			bins = [0,0.3,1.3,3.6,9.4,23.,60.,1000.]
-			hash_key  = 'COT'
-			long_name = 'Cloud Optical Depth Water clouds'
-			unit='1'
-		end
-		
-		'cp': begin
-			bins = [0,180,310,440,560,680,800,1100]
-			hash_key  = 'CTP'
-			long_name = 'Cloud Top Pressure '
-			unit='hPa'
-		end
-		
-		'cem':begin
-			bins = [0.,0.2,0.4,0.8,0.95,1.]
-			hash_key  = 'CEE'
-			long_name = 'Cloud Emissivity '
-			unit = '1'
-		end
-		
-		'cemi':begin
-			bins = [0.,0.2,0.4,0.8,0.95,1.]
-			hash_key  = 'CEE'
-			long_name = 'Cloud Emissivity Ice '
-			unit='1'
-		end
-		
-		'crew': begin
-			; stapel changed bins according to ref) (see ncdf_gewex__update_product.pro) 
-;			bins=[2.,4.,6.,10.,12.5,15,17.5,20,25,30.]
-			bins=[2.,4.,6.,8.,10.,12.5,15,17.5,20,25,30.]
-			hash_key  = 'CER'
-			long_name = 'Cloud Effective Radius Water Clouds' 
-			unit='um'
-		end
-		
-		'crei': begin
-			; stapel changed bins according to ref) (see ncdf_gewex__update_product.pro) 
-;	 		bins=[5.,10.,20.,40.,60.,80.,100.,150.,300.,1000.]
-			bins= [0,5,10,15,20,25,30,35,40,45,50,55,60,90]
-			hash_key  = 'CER'
-			long_name = 'Cloud Effective Radius Ice Clouds'
-			unit='um'
-		end
-
-	endcase
-
-	return,{  bins : bins		$
-		, hash_key:hash_key	$
-		, long_name : long_name $
-		, unit : unit		$
-		}
-
-end
-
-
 FUNCTION define_year_info, am,pm,  o_ampm , o_am ,o_pm $
             , o_0130 ,o_0730 , o_1330 , o_1930 
 
@@ -224,8 +129,7 @@ FUNCTION define_year_info, am,pm,  o_ampm , o_am ,o_pm $
 		} 
 
 END
-
-
+;-------------------------------------------------------------------------
 PRO ncdf_gewex::update_year
 
 	; defines valid sensors for each year
@@ -301,7 +205,7 @@ PRO ncdf_gewex::update_year
 		ENDCASE
 	endelse
 END
-
+;-------------------------------------------------------------------------
 ; stapel (12/2014)
 PRO ncdf_gewex::update_node, nodes
 	self.nodes = ptr_new(nodes)
@@ -384,71 +288,71 @@ PRO ncdf_gewex::update
 
 	CASE strLowCase(self.which_file) of
 
-		'ampm': begin
-			if self.modis then 	self.outfile='_'+'MODIS-'+self.algo+'_TERRA-AQUA_AMPM_'	else $
-								self.outfile='_'+'AVHRR-'+self.algo+'_NOAA_AMPM_'
+		'ampm':	begin
+					if self.modis then 	self.outfile='_'+'MODIS-'+self.algo+'_TERRA-AQUA_AMPM_'	else $
+										self.outfile='_'+'AVHRR-'+self.algo+'_NOAA_AMPM_'
 
-			self -> update_node,['asc','desc']; here we take both nodes (stapel (12/2014))
-		end
+					self -> update_node,['asc','desc']; here we take both nodes (stapel (12/2014))
+				end
 
-		'am' : begin
-			satellite[1] = 'not_needed'
-			if self.famec then 	self.outfile='_'+'MERIS+AATSR-'	+self.algo+'_ENVISAT_1030AMPM_'	else $
-			if self.atsr2 then 	self.outfile='_'+'ATSR2-'		+self.algo+'_ERS2_1030AMPM_'	else $
-			if self.aatsr then 	self.outfile='_'+'AATSR-'		+self.algo+'_ENVISAT_1030AMPM_'	else $
-			if self.modis then 	self.outfile='_'+'MODIS-'		+self.algo+'_TERRA_1030AMPM_'	else $
-								self.outfile='_'+'AVHRR-'		+self.algo+'_NOAA_0730AMPM_'
+		'am' : 	begin
+					satellite[1] = 'not_needed'
+					if self.famec then 	self.outfile='_'+'MERIS+AATSR-'	+self.algo+'_ENVISAT_1030AMPM_'	else $
+					if self.atsr2 then 	self.outfile='_'+'ATSR2-'		+self.algo+'_ERS2_1030AMPM_'	else $
+					if self.aatsr then 	self.outfile='_'+'AATSR-'		+self.algo+'_ENVISAT_1030AMPM_'	else $
+					if self.modis then 	self.outfile='_'+'MODIS-'		+self.algo+'_TERRA_1030AMPM_'	else $
+										self.outfile='_'+'AVHRR-'		+self.algo+'_NOAA_0730AMPM_'
 			
-			self -> update_node,['asc','desc']; here we take both nodes (stapel (12/2014))
-		end
+					self -> update_node,['asc','desc']; here we take both nodes (stapel (12/2014))
+				end
 
-		'pm' : begin
-			satellite[0] = 'not_needed'
-			if self.modis then 	self.outfile='_'+'MODIS-'+self.algo+'_AQUA_0130AMPM_'	else $
-								self.outfile='_'+'AVHRR-'+self.algo+'_NOAA_0130AMPM_'
+		'pm' : 	begin
+					satellite[0] = 'not_needed'
+					if self.modis then 	self.outfile='_'+'MODIS-'+self.algo+'_AQUA_0130AMPM_'	else $
+										self.outfile='_'+'AVHRR-'+self.algo+'_NOAA_0130AMPM_'
 
-			self -> update_node,['asc','desc']; here we take both nodes (stapel (12/2014))
-		end
+					self -> update_node,['asc','desc']; here we take both nodes (stapel (12/2014))
+				end
 
-		'1330':begin ; daylight node for the pm sats! (stapel (12/2014))
-			satellite[0] = 'not_needed'
-			if self.modis then	self.outfile='_'+'MODIS-'+self.algo+'_AQUA_0130PM_'	else $
-								self.outfile='_'+'AVHRR-'+self.algo+'_NOAA_0130PM_'
+		'1330':	begin ; daylight node for the pm sats! (stapel (12/2014))
+					satellite[0] = 'not_needed'
+					if self.modis then	self.outfile='_'+'MODIS-'+self.algo+'_AQUA_0130PM_'	else $
+										self.outfile='_'+'AVHRR-'+self.algo+'_NOAA_0130PM_'
 
-			self -> update_node, ['asc']; for the pm sats 'asc' should always be in daylight! (stapel (12/2014))
-		end
+					self -> update_node, ['asc']; for the pm sats 'asc' should always be in daylight! (stapel (12/2014))
+				end
 
-		'0130':begin ; night node for the pm sats! (stapel (12/2014))
-			satellite[0] = 'not_needed'
-			self.process_day_prds = 0l
-			if self.modis then	self.outfile='_'+'MODIS-'+self.algo+'_AQUA_0130AM_'	else $
-								self.outfile='_'+'AVHRR-'+self.algo+'_NOAA_0130AM_'
+		'0130':	begin ; night node for the pm sats! (stapel (12/2014))
+					satellite[0] = 'not_needed'
+					self.process_day_prds = 0l
+					if self.modis then	self.outfile='_'+'MODIS-'+self.algo+'_AQUA_0130AM_'	else $
+										self.outfile='_'+'AVHRR-'+self.algo+'_NOAA_0130AM_'
 
-			self -> update_node, 'desc' ; for the pm sats 'desc' should always be night! (stapel (12/2014))
-		end
+					self -> update_node, 'desc' ; for the pm sats 'desc' should always be night! (stapel (12/2014))
+				end
 
-		'0730':begin  ; daylight node for the am sats!  (stapel (12/2014))
-			satellite[1] = 'not_needed'
-			if self.famec then	self.outfile='_'+'MERIS+AATSR-'	+self.algo+'_ENVISAT_1030AM_'	else $
-			if self.atsr2 then 	self.outfile='_'+'ATSR2-'		+self.algo+'_ERS2_1030AM_'		else $
-			if self.aatsr then 	self.outfile='_'+'AATSR-'		+self.algo+'_ENVISAT_1030AM_'	else $
-			if self.modis then 	self.outfile='_'+'MODIS-'		+self.algo+'_TERRA_1030AM_'		else $
-								self.outfile='_'+'AVHRR-'		+self.algo+'_NOAA_0730AM_'
+		'0730':	begin  ; daylight node for the am sats!  (stapel (12/2014))
+					satellite[1] = 'not_needed'
+					if self.famec then	self.outfile='_'+'MERIS+AATSR-'	+self.algo+'_ENVISAT_1030AM_'	else $
+					if self.atsr2 then 	self.outfile='_'+'ATSR2-'		+self.algo+'_ERS2_1030AM_'		else $
+					if self.aatsr then 	self.outfile='_'+'AATSR-'		+self.algo+'_ENVISAT_1030AM_'	else $
+					if self.modis then 	self.outfile='_'+'MODIS-'		+self.algo+'_TERRA_1030AM_'		else $
+										self.outfile='_'+'AVHRR-'		+self.algo+'_NOAA_0730AM_'
 
-			self -> update_node, (satellite[0] eq 'n15' ? 'asc' : 'desc'); noaa15 is different (stapel (12/2014))
-		end
+					self -> update_node, (satellite[0] eq 'n15' ? 'asc' : 'desc'); noaa15 is different (stapel (12/2014))
+				end
 
-		'1930':begin  ; night node for the am sats!  (stapel (12/2014))
-			satellite[1] = 'not_needed'
-			self.process_day_prds = 0l
-			if self.famec then	self.outfile='_'+'MERIS+AATSR-'	+self.algo+'_ENVISAT_1030PM_'	else $
-			if self.atsr2 then	self.outfile='_'+'ATSR2-'		+self.algo+'_ERS2_1030PM_'		else $
-			if self.aatsr then	self.outfile='_'+'AATSR-'		+self.algo+'_ENVISAT_1030PM_'	else $
-			if self.modis then	self.outfile='_'+'MODIS-'		+self.algo+'_TERRA_1030PM_'		else $
-								self.outfile='_'+'AVHRR-'		+self.algo+'_NOAA_0730PM_'
+		'1930':	begin  ; night node for the am sats!  (stapel (12/2014))
+					satellite[1] = 'not_needed'
+					self.process_day_prds = 0l
+					if self.famec then	self.outfile='_'+'MERIS+AATSR-'	+self.algo+'_ENVISAT_1030PM_'	else $
+					if self.atsr2 then	self.outfile='_'+'ATSR2-'		+self.algo+'_ERS2_1030PM_'		else $
+					if self.aatsr then	self.outfile='_'+'AATSR-'		+self.algo+'_ENVISAT_1030PM_'	else $
+					if self.modis then	self.outfile='_'+'MODIS-'		+self.algo+'_TERRA_1030PM_'		else $
+										self.outfile='_'+'AVHRR-'		+self.algo+'_NOAA_0730PM_'
 
-			self -> update_node, (satellite[0] eq 'n15' ? 'desc' : 'asc'); noaa15 is different (stapel (12/2014))
-		end
+					self -> update_node, (satellite[0] eq 'n15' ? 'desc' : 'asc'); noaa15 is different (stapel (12/2014))
+				end
 
 	ENDCASE
 
@@ -479,7 +383,7 @@ PRO ncdf_gewex::update
 		self.satnames[0] = strupcase(dum_sat[0])
 		self.satnames[1] = strupcase(dum_sat[1])
 		satellite = dum_sat
-	endif else begin
+	endif else begin ; default ESACCI AVHRR
 		self.sensor      = 'AVHRR'
 		no_idx = where(strmid(satellite,0,1) eq 'n' and satellite ne 'nnn' and satellite ne 'not_needed',no_cnt)
 		me_idx = where(strmid(satellite,0,1) eq 'm' and satellite ne 'nnn' and satellite ne 'not_needed',me_cnt)
@@ -501,11 +405,11 @@ PRO ncdf_gewex::update
 	self.variables = ptr_new(self -> get_l2b_varnames())
 
 	self.full_nc_file = self.outpath+'/' $
-			+string(self.year,format='(i4.4)') +'/' $
-					+self.product $
-					+self.outfile $
-					+string(self.year,format='(i4.4)') $
-					+'.nc'
+						+string(self.year,format='(i4.4)') +'/' $
+						+self.product $
+						+self.outfile $
+						+string(self.year,format='(i4.4)') $
+						+'.nc'
 
 	file_mkdir,file_dirname(self.full_nc_file)
 
@@ -544,6 +448,15 @@ FUNCTION ncdf_gewex::init, modis = modis, aatsr = aatsr, atsr2 = atsr2, famec = 
 	self.atsr2  = keyword_set(atsr2)
 	self.clara2 = keyword_set(clara2)
 
+	; set dummies for startup
+	self.year       		= 2008L
+	self.month      		= 1
+	self.product    		= 'CA'
+	self.which_file 		= 'ampm'
+	self.nodes      		= ptr_new(['asc','desc'])
+	self.variables			= ptr_new('cmask')
+	self.file 				= PTR_NEW('no_file')
+	; ---
 	; ncdf global attributes
 	self.climatology		= 'ESA Cloud_cci'
 	self.contact    		= 'contact.cloudcci@dwd.de'
@@ -551,35 +464,25 @@ FUNCTION ncdf_gewex::init, modis = modis, aatsr = aatsr, atsr2 = atsr2, famec = 
 	; ---
 	self.algo       		= self.clara2 ? 'CLARA_A2' : 'ESACCI'	; string used in output filename
 	self.version    		= 'v2.0'  								; used in global attributes and file_search() !!
-	; set dummies and defaults
-	self.year       		= 2008L
-	self.month      		= 1
-	self.product    		= 'CA'
-	self.which_file 		= 'ampm'
-	self.kind       		= 'mean'
-	self.nodes      		= ptr_new(['asc','desc'])
-	self.variables			= ptr_new('cmask') ; dummy for list of self. algo varnames ; this will be updated 
-	self.missing_value 		= -999.
-	self.calc_spatial_stdd	= 0;!FALSE ; set this to !TRUE to calculate spatial stdd. for each variable instead of temporal (default)
-	self.compress   		= 4 ; compress level for ncdf4 files [0-9]
-	self.resolution 		= 1. ; output resolution in degree (equal angle)
-	self.file 				= PTR_NEW('no_file')
-	self.clara_default_var	= 'CAA'
+	self.missing_value 		= -999.									; Fillvalue used in output ncdfs
+	self.calc_spatial_stdd	= 0										; calculate spatial instead of temporal stdd. (default)
+	self.compress   		= 4 									; compress level for ncdf4 files [0-9]
+	self.resolution 		= 1. 									; output resolution in degree (equal angle)
+	self.clara_default_var	= 'CAA'									; this is the path where the l2b files of clara will be searched
 	; ---
 	; don't change this!!
 	self.which_file_list 	= ['ampm','am','pm','0130','0730','1330','1930']
 	; ---
 
-
 	; paths, edit here!
-	apx_dir = ''
+	apx_dir = 'AVHRR/'
 	if self.modis  then apx_dir = 'MODIS/'
 	if self.famec  then apx_dir = 'FAMEC/'
 	if self.aatsr  then apx_dir = 'AATSR/'
 	if self.atsr2  then apx_dir = 'ATSR2/'
 	if self.clara2 then self.inpath = '/cmsaf/cmsaf-cld7/AVHRR_GAC_2/LEVEL2B/' $
 	else self.inpath = '/cmsaf/cmsaf-cld7/esa_cloud_cci/data/v2.0/L3U/'
-	self.outpath = '/cmsaf/cmsaf-cld8/sstapelb/gewex/test_gac_cci/'+apx_dir
+	self.outpath = '/cmsaf/cmsaf-cld8/sstapelb/gewex/'+apx_dir
 	; ---
 
 	; here you find all the defined variable names
@@ -607,8 +510,8 @@ PRO  ncdf_gewex__define
 
    void = { ncdf_gewex $
 	  , inherits idl_object $
-	  , year : 1980L $
-	  , month : 11L $
+	  , year : 2000L $
+	  , month : 1L $
 	  , year_info : PTR_NEW()  $
 	  , product : '' $
 	  , product_info : PTR_NEW() $
@@ -632,7 +535,6 @@ PRO  ncdf_gewex__define
 	  , climatology : '' $ 
 	  , contact : '' $ 
 	  , institution : '' $ 
-	  , kind : '' $
 	  , missing_value : 0. $
 	  , compress : 0l $
 	  , process_day_prds : 1l $
