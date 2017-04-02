@@ -226,7 +226,6 @@ PRO ncdf_gewex::set_which, which
 	self.which_file=strlowcase(which)
 	self.update
 END
-
 ;----------------------------------------------
 ;
 ;
@@ -256,8 +255,7 @@ PRO ncdf_gewex::getProperty $
 		year = self.year
 		inpath = self.inpath
 END
-
-
+;-------------------------------------------------------------------------
 ;+
 ; :Description:
 ;    Describe the procedure.
@@ -414,32 +412,31 @@ PRO ncdf_gewex::update
 	file_mkdir,file_dirname(self.full_nc_file)
 
 END
-
+;-------------------------------------------------------------------------
 PRO ncdf_gewex::set_product,product,current = current
 	current = self.product
 	self.product = product
 	self->update
 END
-
+;-------------------------------------------------------------------------
 PRO ncdf_gewex::set_kind, kind
 	self.kind = kind
 END
-
+;-------------------------------------------------------------------------
 PRO ncdf_gewex::set_key_ge
 	self.key_ge = self.product+self.region+self.which_file
 END
-
+;-------------------------------------------------------------------------
 PRO ncdf_gewex::set_year,year
 	self.year = year
 	self->update
 END
-
+;-------------------------------------------------------------------------
 PRO ncdf_gewex::set_month,month
 	self.month = month
 	self->update
 END
-
-
+;-------------------------------------------------------------------------
 FUNCTION ncdf_gewex::init, modis = modis, aatsr = aatsr, atsr2 = atsr2, famec = famec, clara2 = clara2
 
 	self.famec  = keyword_set(famec)
@@ -504,8 +501,7 @@ FUNCTION ncdf_gewex::init, modis = modis, aatsr = aatsr, atsr2 = atsr2, famec = 
 
 	return,1
 end
-
-
+;-------------------------------------------------------------------------
 PRO  ncdf_gewex__define
 
    void = { ncdf_gewex $
