@@ -99,11 +99,11 @@ function ncdf_gewex::get_l2b_files, day = day, recursive = recursive, count = co
 			dir    = self.fullpath+yy+'/'+mm+'/'
 		endelse
 
-		files     = file_search(dir+filen, count=count_file)
-		if count_file eq 0 and keyword_set(recursive) then begin
-			files = file_search(dir,filen, count=count_file)
+		files     = file_search(dir+filen, count=count)
+		if count eq 0 and keyword_set(recursive) then begin
+			files = file_search(dir,filen, count=count)
 		endif
-		if count_file eq 0 then begin
+		if count eq 0 then begin
 			files = 'no_file'
 			print,'no file  check file pattern ..',dir + filen
 			print,'satellite ==> ',self.satnames
