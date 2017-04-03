@@ -292,7 +292,6 @@ PRO ncdf_gewex::update
 
 					self -> update_node,['asc','desc']; here we take both nodes (stapel (12/2014))
 				end
-
 		'am' : 	begin
 					satellite[1] = 'not_needed'
 					if self.famec then 	self.outfile='_'+'MERIS+AATSR-'	+self.algo+'_ENVISAT_1030AMPM_'	else $
@@ -303,7 +302,6 @@ PRO ncdf_gewex::update
 			
 					self -> update_node,['asc','desc']; here we take both nodes (stapel (12/2014))
 				end
-
 		'pm' : 	begin
 					satellite[0] = 'not_needed'
 					if self.modis then 	self.outfile='_'+'MODIS-'+self.algo+'_AQUA_0130AMPM_'	else $
@@ -311,15 +309,13 @@ PRO ncdf_gewex::update
 
 					self -> update_node,['asc','desc']; here we take both nodes (stapel (12/2014))
 				end
-
 		'1330':	begin ; daylight node for the pm sats! (stapel (12/2014))
 					satellite[0] = 'not_needed'
 					if self.modis then	self.outfile='_'+'MODIS-'+self.algo+'_AQUA_0130PM_'	else $
 										self.outfile='_'+'AVHRR-'+self.algo+'_NOAA_0130PM_'
 
-					self -> update_node, ['asc']; for the pm sats 'asc' should always be in daylight! (stapel (12/2014))
+					self -> update_node, 'asc' ; for the pm sats 'asc' should always be in daylight! (stapel (12/2014))
 				end
-
 		'0130':	begin ; night node for the pm sats! (stapel (12/2014))
 					satellite[0] = 'not_needed'
 					self.process_day_prds = 0l
@@ -328,7 +324,6 @@ PRO ncdf_gewex::update
 
 					self -> update_node, 'desc' ; for the pm sats 'desc' should always be night! (stapel (12/2014))
 				end
-
 		'0730':	begin  ; daylight node for the am sats!  (stapel (12/2014))
 					satellite[1] = 'not_needed'
 					if self.famec then	self.outfile='_'+'MERIS+AATSR-'	+self.algo+'_ENVISAT_1030AM_'	else $
@@ -337,9 +332,8 @@ PRO ncdf_gewex::update
 					if self.modis then 	self.outfile='_'+'MODIS-'		+self.algo+'_TERRA_1030AM_'		else $
 										self.outfile='_'+'AVHRR-'		+self.algo+'_NOAA_0730AM_'
 
-					self -> update_node, (satellite[0] eq 'n15' ? 'asc' : 'desc'); noaa15 is different (stapel (12/2014))
+					self -> update_node, 'desc' ; for the pm sats 'desc' should always be daylight! (stapel (12/2014))
 				end
-
 		'1930':	begin  ; night node for the am sats!  (stapel (12/2014))
 					satellite[1] = 'not_needed'
 					self.process_day_prds = 0l
@@ -349,7 +343,7 @@ PRO ncdf_gewex::update
 					if self.modis then	self.outfile='_'+'MODIS-'		+self.algo+'_TERRA_1030PM_'		else $
 										self.outfile='_'+'AVHRR-'		+self.algo+'_NOAA_0730PM_'
 
-					self -> update_node, (satellite[0] eq 'n15' ? 'desc' : 'asc'); noaa15 is different (stapel (12/2014))
+					self -> update_node, 'asc' ; for the pm sats 'asc' should always be night! (stapel (12/2014))
 				end
 
 	ENDCASE
