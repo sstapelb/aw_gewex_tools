@@ -29,10 +29,10 @@ PRO ncdf_gewex::create_l3_all
 	dtim = findgen(nmonth)
 
 	; variable array declarations
-	ncdtot = hash()
+	ncdtot   = hash()
 	ncdvar_m = hash()
 	ncdvar_s = hash()
-	nchisto = hash()
+	nchisto  = hash()
 
 	; need a dummy hash to find out which products are generated
 	first_month_flag = hash()

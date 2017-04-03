@@ -113,6 +113,22 @@ function ncdf_gewex::get_l2b_files, day = day, recursive = recursive, count = co
 
 end
 ;-------------------------------------------------------------------------
+pro ncdf_gewex::exclude_from_lists, ex_prd_list
+
+	foreach prd, strupcase(ex_prd_list) do begin
+		; all products
+		idx = where((*self.all_prd_list) eq prd,idxcnt,complement=no_idx,ncomplement=no_idxcnt)
+		if idxcnt gt 0 and no_idxcnt gt 0 then self.all_prd_list = ptr_new((*self.all_prd_list)[no_idx])
+		; rel products
+		idx = where((*self.rel_prd_list) eq prd,idxcnt,complement=no_idx,ncomplement=no_idxcnt)
+		if idxcnt gt 0 and no_idxcnt gt 0 then self.rel_prd_list = ptr_new((*self.rel_prd_list)[no_idx])
+		; hist_products
+		idx = where((*self.hist_prd_list) eq prd,idxcnt,complement=no_idx,ncomplement=no_idxcnt)
+		if idxcnt gt 0 and no_idxcnt gt 0 then self.hist_prd_list = ptr_new((*self.hist_prd_list)[no_idx])
+	endforeach
+
+end
+;-------------------------------------------------------------------------
 FUNCTION define_year_info, am,pm,  o_ampm , o_am ,o_pm $
             , o_0130 ,o_0730 , o_1330 , o_1930 
 
@@ -445,8 +461,8 @@ FUNCTION ncdf_gewex::init, modis = modis, aatsr = aatsr, atsr2 = atsr2, famec = 
 	self.file 				= PTR_NEW('no_file')
 	; ---
 	; ncdf global attributes
-	self.climatology		= 'ESA Cloud_cci'
-	self.contact    		= 'contact.cloudcci@dwd.de'
+	self.climatology		= self.clara2 ? 'CLARA-A2' : 'ESA Cloud_cci'
+	self.contact    		= self.clara2 ? 'contact.cmsaf@dwd.de' : 'contact.cloudcci@dwd.de'
 	self.institution		= 'Deutscher Wetterdienst'
 	; ---
 	self.algo       		= self.clara2 ? 'CLARA_A2' : 'ESACCI'	; string used in output filename
@@ -472,9 +488,10 @@ FUNCTION ncdf_gewex::init, modis = modis, aatsr = aatsr, atsr2 = atsr2, famec = 
 	self.outpath = '/cmsaf/cmsaf-cld8/sstapelb/gewex/'+apx_dir
 	; ---
 
-	; here you find all the defined variable names
-	; you can choose which of the variables you want to process
-	; Note! New variables need to be defined e.g. in "extract_all_data" and elsewhere
+	; !Dont change anything here. Use below procedure "remove_from_lists" to remove products!
+	; Here you find all the defined variables that will be processed. Optical properties will 
+	; only processed if daylight node is involved!
+	; New variables need to be defined e.g. in "extract_all_data" and elsewhere
 	; 'ALWP','AIWP','AIWPH' not included yet
 	self.all_prd_list	= PTR_NEW([	'CA','CAH','CAM','CAL','CAW','CAI','CAIH'			, $
 									'CAE','CAEH','CAEM','CAEL','CAEW','CAEI','CAEIH'	, $
@@ -486,6 +503,12 @@ FUNCTION ncdf_gewex::init, modis = modis, aatsr = aatsr, atsr2 = atsr2, famec = 
 	self.rel_prd_list 	= PTR_NEW([	'CAHR','CAMR','CALR','CAWR','CAIR','CAIHR','CAWDR','CAIDR'])
 	self.hist_prd_list	= PTR_NEW([	'COD_CP','CEM_CP','CEMI_CREI','CODW_CREW','CODI_CREI'])
 	;--------------------------------------------------------------------------------------------------
+
+	; Remove products from the lists, e.g. CLARA-A2 has no CEM included
+	; removed products will not be processed!
+	if self.clara2 then self.exclude_from_lists,[	'CAE','CAEH','CAEM','CAEL','CAEW','CAEI','CAEIH',$
+													'CEM','CEMH','CEMM','CEML','CEMW','CEMI','CEMIH',$
+													'CEM_CP','CEMI_CREI']
 
 	self -> update
 
