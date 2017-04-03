@@ -194,14 +194,10 @@ PRO ncdf_gewex::update_year
 			2010: self.year_info = PTR_NEW(define_year_info ('ma','n19',1B,1B,1B,1B,1B,1B,1B))
 			2011: self.year_info = PTR_NEW(define_year_info ('ma','n19',1B,1B,1B,1B,1B,1B,1B))
 			2012: self.year_info = PTR_NEW(define_year_info ('ma','n19',1B,1B,1B,1B,1B,1B,1B))
-; 			2013: self.year_info = PTR_NEW(define_year_info ((self.month le 4 ? 'ma':'mb'),'n19',1B,1B,1B,1B,1B,1B,1B))
-; 			2014: self.year_info = PTR_NEW(define_year_info ('mb','n19',1B,1B,1B,1B,1B,1B,1B))
-; 			2015: self.year_info = PTR_NEW(define_year_info ('mb','n19',1B,1B,1B,1B,1B,1B,1B))
-; 			2016: self.year_info = PTR_NEW(define_year_info ('mb','n19',1B,1B,1B,1B,1B,1B,1B))
-			2013: self.year_info = PTR_NEW(define_year_info ('ma','n19',1B,1B,1B,1B,1B,1B,1B)) ; cci decision take MA instead of MB
-			2014: self.year_info = PTR_NEW(define_year_info ('ma','n19',1B,1B,1B,1B,1B,1B,1B)) ; cci decision take MA instead of MB
-			2015: self.year_info = PTR_NEW(define_year_info ('ma','n19',1B,1B,1B,1B,1B,1B,1B)) ; cci decision take MA instead of MB
-			2016: self.year_info = PTR_NEW(define_year_info ('ma','n19',1B,1B,1B,1B,1B,1B,1B)) ; cci decision take MA instead of MB
+			2013: self.year_info = PTR_NEW(define_year_info ((self.month le 4 ? 'ma':(self.clara2 ? 'mb':'ma')),'n19',1B,1B,1B,1B,1B,1B,1B))
+			2014: self.year_info = PTR_NEW(define_year_info ((self.clara2 ? 'mb':'ma'),'n19',1B,1B,1B,1B,1B,1B,1B))
+			2015: self.year_info = PTR_NEW(define_year_info ((self.clara2 ? 'mb':'ma'),'n19',1B,1B,1B,1B,1B,1B,1B))
+			2016: self.year_info = PTR_NEW(define_year_info ((self.clara2 ? 'mb':'ma'),'n19',1B,1B,1B,1B,1B,1B,1B))
 		ENDCASE
 	endelse
 END
