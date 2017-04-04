@@ -91,8 +91,8 @@ function ncdf_gewex::get_l2b_files, day = day, recursive = recursive, count = co
 
 		if self.clara2 then begin
 			varn   = strupcase(self.clara_default_var)
-			res    = '23' ; 0.05 degree regular global grid
-			filen  = varn+'in'+yy+mm+dd+'0000'+self.version+res+'{'+strjoin(self.satnames,',')+'}01GL.nc'
+			grid   = '23' ; 0.05 degree regular global grid
+			filen  = varn+'in'+yy+mm+dd+'0000'+self.version+grid+'{'+strjoin(self.satnames,',')+'}01GL.nc'
 			dir    = self.fullpath+varn+'/{'+strjoin(self.satnames,',')+'}/'+yy+'/'
 		endif else begin
 			; use cci naming convention
