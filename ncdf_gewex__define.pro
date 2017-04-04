@@ -91,7 +91,8 @@ function ncdf_gewex::get_l2b_files, day = day, recursive = recursive, count = co
 
 		if self.clara2 then begin
 			varn   = strupcase(self.clara_default_var)
-			filen  = varn+'in'+yy+mm+dd+'000000223{'+strjoin(self.satnames,',')+'}01GL.nc'
+			res    = '23' ; 0.05 degree regular global grid
+			filen  = varn+'in'+yy+mm+dd+'0000'+self.version+res+'{'+strjoin(self.satnames,',')+'}01GL.nc'
 			dir    = self.fullpath+varn+'/{'+strjoin(self.satnames,',')+'}/'+yy+'/'
 		endif else begin
 			; use cci naming convention
@@ -382,7 +383,7 @@ PRO ncdf_gewex::update
 		no_idx = where(strmid(satellite,0,1) eq 'n' and satellite ne 'nnn' and satellite ne 'not_needed',no_cnt)
 		me_idx = where(strmid(satellite,0,1) eq 'm' and satellite ne 'nnn' and satellite ne 'not_needed',me_cnt)
 		dum_sat = satellite
-		if no_cnt gt 0 then dum_sat[no_idx] = 'avn' +strmid(satellite[no_idx],1)
+		if no_cnt gt 0 then dum_sat[no_idx] = 'avn' +string(strmid(satellite[no_idx],1),format='(i2.2)')
 		if me_cnt gt 0 then dum_sat[me_idx] = 'avme'+strmid(satellite[me_idx],1)
 		self.satnames[0] = strupcase(dum_sat[0])
 		self.satnames[1] = strupcase(dum_sat[1])
@@ -466,7 +467,7 @@ FUNCTION ncdf_gewex::init, modis = modis, aatsr = aatsr, atsr2 = atsr2, famec = 
 	self.institution		= 'Deutscher Wetterdienst'
 	; ---
 	self.algo       		= self.clara2 ? 'CLARA_A2' : 'ESACCI'	; string used in output filename
-	self.version    		= 'v2.0'  								; used in global attributes and file_search() !!
+	self.version    		= self.clara2 ? '002' : 'v2.0'  		; used in global attributes and file_search() !!
 	self.missing_value 		= -999.									; Fillvalue used in output ncdfs
 	self.calc_spatial_stdd	= 0										; calculate spatial instead of temporal stdd. (default)
 	self.compress   		= 4 									; compress level for ncdf4 files [0-9]
@@ -485,7 +486,7 @@ FUNCTION ncdf_gewex::init, modis = modis, aatsr = aatsr, atsr2 = atsr2, famec = 
 	if self.atsr2  then apx_dir = 'ATSR2/'
 	if self.clara2 then self.inpath = '/cmsaf/cmsaf-cld7/AVHRR_GAC_2/LEVEL2B/' $
 	else self.inpath = '/cmsaf/cmsaf-cld7/esa_cloud_cci/data/v2.0/L3U/'
-	self.outpath = '/cmsaf/cmsaf-cld8/sstapelb/gewex/'+apx_dir
+	self.outpath = '/cmsaf/cmsaf-cld7/esa_cloud_cci/data/v2.0/gewex/new/'+apx_dir
 	; ---
 
 	; !Dont change anything here. Use below procedure "remove_from_lists" to remove products!
