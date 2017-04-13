@@ -25,7 +25,7 @@ FUNCTION ncdf_gewex::extract_all_data, file, node = node
 		stop
 	endif
 
-	if l2b_data.haskey('CMASK') then ca    = l2b_data.remove('CMASK')
+	if l2b_data.haskey('CMASK') 	then ca    = l2b_data.remove('CMASK')
 	if l2b_data.haskey('CER')	then ref   = l2b_data.remove('CER')
 	if l2b_data.haskey('ILLUM')	then illum = l2b_data.remove('ILLUM')
 	if l2b_data.haskey('CTP')	then ctp   = l2b_data.remove('CTP')

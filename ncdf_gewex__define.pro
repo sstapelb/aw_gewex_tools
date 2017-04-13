@@ -64,6 +64,14 @@ function ncdf_gewex::get_l2b_varnames, product_list, found = found
 		if vars.haskey('CPH')	then vars['CPH']	= {var:'cph',path:'CPH',unit_scale:1.0}
 		if vars.haskey('CEE')	then vars['CEE']	= {var:'',path:'',unit_scale:1.0} ; not defined in clara remove from prd_list
 	endif
+	
+	if self.hector then begin
+		if vars.haskey('CMASK')	then vars['CMASK']	= {var:'cc_mask',path:'CMA',unit_scale:1.0}
+		if vars.haskey('CTP')	then vars['CTP']	= {var:'ctp',path:'CTO',unit_scale:1.0}
+		if vars.haskey('CTH')	then vars['CTH']	= {var:'cth',path:'CTO',unit_scale:0.001}
+		if vars.haskey('CTT')	then vars['CTT']	= {var:'ctt',path:'CTO',unit_scale:1.0}
+		if vars.haskey('CEE')	then vars['CEE']	= {var:'cem',path:'CMA',unit_scale:0.01}
+	endif
 
 	found = n_elements(vars)
 
@@ -90,8 +98,13 @@ function ncdf_gewex::get_l2b_files, day = day, recursive = recursive, count = co
 		dd   = keyword_set(day) ? string(day,format='(i2.2)') : '??'
 
 		if self.clara2 then begin
-			varn   = strupcase(self.clara_default_var)
+			varn   = strupcase(self.default_var)
 			grid   = '23' ; 0.05 degree regular global grid
+			filen  = varn+'in'+yy+mm+dd+'0000'+self.version+grid+'{'+strjoin(self.satnames,',')+'}01GL.nc'
+			dir    = self.fullpath+varn+'/{'+strjoin(self.satnames,',')+'}/'+yy+'/'
+		endif else if self.hector then begin
+			varn   = strupcase(self.default_var)
+			grid   = '19' ; 0.25 degree regular global grid
 			filen  = varn+'in'+yy+mm+dd+'0000'+self.version+grid+'{'+strjoin(self.satnames,',')+'}01GL.nc'
 			dir    = self.fullpath+varn+'/{'+strjoin(self.satnames,',')+'}/'+yy+'/'
 		endif else begin
@@ -176,6 +189,48 @@ PRO ncdf_gewex::update_year
 			1995	: self.year_info = PTR_NEW(define_year_info ((self.month le 7 ? 'nnn':'ers2'),'nnn',0B,1B,0B,0B,1B,0B,1B))
 			else	: if between(self.year,1996,2002) then self.year_info = PTR_NEW(define_year_info ('ers2','nnn',0B,1B,0B,0B,1B,0B,1B))
 		endcase
+	endif else if self.hector then begin
+		;HIRS
+		CASE self.year OF
+			1979: self.year_info = PTR_NEW(define_year_info ((self.month le  6 ? 'nnn':'HIN06'),'HIN05',1B,1B,1B,1B,1B,1B,1B))
+			1980: self.year_info = PTR_NEW(define_year_info ('HIN06','HIN05',1B,1B,1B,1B,1B,1B,1B))
+			1981: self.year_info = PTR_NEW(define_year_info ('HIN06',(self.month le  7 ? 'HIN05':'HIN07'),1B,1B,1B,1B,1B,1B,1B))
+			1982: self.year_info = PTR_NEW(define_year_info ('HIN06','HIN07',1B,1B,1B,1B,1B,1B,1B))
+			1983: self.year_info = PTR_NEW(define_year_info ((self.month le  4 ? 'HIN06':'HIN08'),'HIN07',1B,1B,1B,1B,1B,1B,1B))
+			1984: self.year_info = PTR_NEW(define_year_info ((self.month le  6 ? 'HIN08':'nnn'),'HIN07',1B,1B,1B,1B,1B,1B,1B))
+			1985: self.year_info = PTR_NEW(define_year_info ('nnn','HIN09',0B,0B,1B,1B,0B,1B,0B))
+			1986: self.year_info = PTR_NEW(define_year_info ('nnn','HIN09',0B,0B,1B,1B,0B,1B,0B))
+			1987: self.year_info = PTR_NEW(define_year_info ('HIN10','HIN09',1B,1B,1B,1B,1B,1B,1B))
+			1988: self.year_info = PTR_NEW(define_year_info ('HIN10',(self.month le 10 ? 'HIN09':'HIN11'),1B,1B,1B,1B,1B,1B,1B))
+			1989: self.year_info = PTR_NEW(define_year_info ('HIN10','HIN11',1B,1B,1B,1B,1B,1B,1B))
+			1990: self.year_info = PTR_NEW(define_year_info ('HIN10','HIN11',1B,1B,1B,1B,1B,1B,1B))
+			1991: self.year_info = PTR_NEW(define_year_info ((self.month le  9 ? 'HIN10':'HIN12'),'HIN11',1B,1B,1B,1B,1B,1B,1B))
+			1992: self.year_info = PTR_NEW(define_year_info ('HIN12','HIN11',1B,1B,1B,1B,1B,1B,1B))
+			1993: self.year_info = PTR_NEW(define_year_info ('HIN12','HIN11',1B,1B,1B,1B,1B,1B,1B))
+			1994: self.year_info = PTR_NEW(define_year_info ('HIN12','HIN11',1B,1B,1B,1B,1B,1B,1B))
+			1995: self.year_info = PTR_NEW(define_year_info ('HIN12','HIN14',1B,1B,1B,1B,1B,1B,1B))
+			1996: self.year_info = PTR_NEW(define_year_info ('HIN12','HIN14',1B,1B,1B,1B,1B,1B,1B))
+			1997: self.year_info = PTR_NEW(define_year_info ('HIN12','HIN14',1B,1B,1B,1B,1B,1B,1B))
+			1998: self.year_info = PTR_NEW(define_year_info ((self.month le  9 ? 'HIN12':'HIN15'),'HIN14',1B,1B,1B,1B,1B,1B,1B))
+			1999: self.year_info = PTR_NEW(define_year_info ('HIN15','HIN14',1B,1B,1B,1B,1B,1B,1B))
+			2000: self.year_info = PTR_NEW(define_year_info ('HIN15','HIN14',1B,1B,1B,1B,1B,1B,1B))
+			2001: self.year_info = PTR_NEW(define_year_info ('HIN15',(self.month le  3 ? 'HIN14':'HIN16'),1B,1B,1B,1B,1B,1B,1B))
+			2002: self.year_info = PTR_NEW(define_year_info ('HIN15','HIN16',1B,1B,1B,1B,1B,1B,1B))
+			2003: self.year_info = PTR_NEW(define_year_info ('HIN17','HIN16',1B,1B,1B,1B,1B,1B,1B))
+			2004: self.year_info = PTR_NEW(define_year_info ('HIN17','HIN16',1B,1B,1B,1B,1B,1B,1B))
+			2005: self.year_info = PTR_NEW(define_year_info ('HIN17','HIN16',1B,1B,1B,1B,1B,1B,1B))
+			2006: self.year_info = PTR_NEW(define_year_info ('HIN17','HIN16',1B,1B,1B,1B,1B,1B,1B))
+			2007: self.year_info = PTR_NEW(define_year_info ((self.month le  6 ? 'HIN17':'HIMEA'),(self.month le  5 ? 'HIN16':'nnn'),1B,1B,1B,1B,1B,1B,1B))
+			2008: self.year_info = PTR_NEW(define_year_info ('HIMEA','nnn',0B,1B,0B,0B,1B,0B,1B))
+			2009: self.year_info = PTR_NEW(define_year_info ('HIMEA',(self.month le  3 ? 'nnn':'HIN19'),1B,1B,1B,1B,1B,1B,1B))
+			2010: self.year_info = PTR_NEW(define_year_info ('HIMEA','HIN19',1B,1B,1B,1B,1B,1B,1B))
+			2011: self.year_info = PTR_NEW(define_year_info ('HIMEA','HIN19',1B,1B,1B,1B,1B,1B,1B))
+			2012: self.year_info = PTR_NEW(define_year_info ('HIMEA','HIN19',1B,1B,1B,1B,1B,1B,1B))
+			2013: self.year_info = PTR_NEW(define_year_info ('HIMEA','HIN19',1B,1B,1B,1B,1B,1B,1B))
+			2014: self.year_info = PTR_NEW(define_year_info ('HIMEA','HIN19',1B,1B,1B,1B,1B,1B,1B))
+			2015: self.year_info = PTR_NEW(define_year_info ('HIMEA','HIN19',1B,1B,1B,1B,1B,1B,1B))
+			2016: self.year_info = PTR_NEW(define_year_info ('HIMEA','HIN19',1B,1B,1B,1B,1B,1B,1B))
+		ENDCASE
 	endif else begin
 		;AVHRR
 		CASE self.year OF
@@ -301,7 +356,7 @@ PRO ncdf_gewex::update
 
 		'ampm':	begin
 					if self.modis then 	self.outfile='_'+'MODIS-'+self.algo+'_TERRA-AQUA_AMPM_'	else $
-										self.outfile='_'+'AVHRR-'+self.algo+'_NOAA_AMPM_'
+								self.outfile='_'+'AVHRR-'+self.algo+'_NOAA_AMPM_'
 
 					self -> update_node,['asc','desc']; here we take both nodes (stapel (12/2014))
 				end
@@ -311,21 +366,21 @@ PRO ncdf_gewex::update
 					if self.atsr2 then 	self.outfile='_'+'ATSR2-'		+self.algo+'_ERS2_1030AMPM_'	else $
 					if self.aatsr then 	self.outfile='_'+'AATSR-'		+self.algo+'_ENVISAT_1030AMPM_'	else $
 					if self.modis then 	self.outfile='_'+'MODIS-'		+self.algo+'_TERRA_1030AMPM_'	else $
-										self.outfile='_'+'AVHRR-'		+self.algo+'_NOAA_0730AMPM_'
+								self.outfile='_'+'AVHRR-'		+self.algo+'_NOAA_0730AMPM_'
 			
 					self -> update_node,['asc','desc']; here we take both nodes (stapel (12/2014))
 				end
 		'pm' : 	begin
 					satellite[0] = 'not_needed'
 					if self.modis then 	self.outfile='_'+'MODIS-'+self.algo+'_AQUA_0130AMPM_'	else $
-										self.outfile='_'+'AVHRR-'+self.algo+'_NOAA_0130AMPM_'
+								self.outfile='_'+'AVHRR-'+self.algo+'_NOAA_0130AMPM_'
 
 					self -> update_node,['asc','desc']; here we take both nodes (stapel (12/2014))
 				end
 		'1330':	begin ; daylight node for the pm sats! (stapel (12/2014))
 					satellite[0] = 'not_needed'
 					if self.modis then	self.outfile='_'+'MODIS-'+self.algo+'_AQUA_0130PM_'	else $
-										self.outfile='_'+'AVHRR-'+self.algo+'_NOAA_0130PM_'
+								self.outfile='_'+'AVHRR-'+self.algo+'_NOAA_0130PM_'
 
 					self -> update_node, 'asc' ; for the pm sats 'asc' should always be in daylight! (stapel (12/2014))
 				end
@@ -333,7 +388,7 @@ PRO ncdf_gewex::update
 					satellite[0] = 'not_needed'
 					self.process_day_prds = 0l
 					if self.modis then	self.outfile='_'+'MODIS-'+self.algo+'_AQUA_0130AM_'	else $
-										self.outfile='_'+'AVHRR-'+self.algo+'_NOAA_0130AM_'
+								self.outfile='_'+'AVHRR-'+self.algo+'_NOAA_0130AM_'
 
 					self -> update_node, 'desc' ; for the pm sats 'desc' should always be night! (stapel (12/2014))
 				end
@@ -343,7 +398,7 @@ PRO ncdf_gewex::update
 					if self.atsr2 then 	self.outfile='_'+'ATSR2-'		+self.algo+'_ERS2_1030AM_'		else $
 					if self.aatsr then 	self.outfile='_'+'AATSR-'		+self.algo+'_ENVISAT_1030AM_'	else $
 					if self.modis then 	self.outfile='_'+'MODIS-'		+self.algo+'_TERRA_1030AM_'		else $
-										self.outfile='_'+'AVHRR-'		+self.algo+'_NOAA_0730AM_'
+								self.outfile='_'+'AVHRR-'		+self.algo+'_NOAA_0730AM_'
 
 					self -> update_node, 'desc' ; for the pm sats 'desc' should always be daylight! (stapel (12/2014))
 				end
@@ -354,7 +409,7 @@ PRO ncdf_gewex::update
 					if self.atsr2 then	self.outfile='_'+'ATSR2-'		+self.algo+'_ERS2_1030PM_'		else $
 					if self.aatsr then	self.outfile='_'+'AATSR-'		+self.algo+'_ENVISAT_1030PM_'	else $
 					if self.modis then	self.outfile='_'+'MODIS-'		+self.algo+'_TERRA_1030PM_'		else $
-										self.outfile='_'+'AVHRR-'		+self.algo+'_NOAA_0730PM_'
+								self.outfile='_'+'AVHRR-'		+self.algo+'_NOAA_0730PM_'
 
 					self -> update_node, 'asc' ; for the pm sats 'asc' should always be night! (stapel (12/2014))
 				end
@@ -378,6 +433,10 @@ PRO ncdf_gewex::update
 		self.sensor      = 'MODIS'
 		self.satnames[0] = strupcase(self.sensor)+'_'+strupcase(satellite[0])
 		self.satnames[1] = strupcase(self.sensor)+'_'+strupcase(satellite[1])
+	endif else if self.hector then begin
+		self.sensor      = 'HIRS'
+		self.satnames[0] = strupcase(satellite[0])
+		self.satnames[1] = strupcase(satellite[1])
 	endif else if self.clara2 then begin
 		self.sensor      = 'AVHRR'
 		no_idx = where(strmid(satellite,0,1) eq 'n' and satellite ne 'nnn' and satellite ne 'not_needed',no_cnt)
@@ -444,13 +503,14 @@ PRO ncdf_gewex::set_month,month
 	self->update
 END
 ;-------------------------------------------------------------------------
-FUNCTION ncdf_gewex::init, modis = modis, aatsr = aatsr, atsr2 = atsr2, famec = famec, clara2 = clara2
+FUNCTION ncdf_gewex::init, modis = modis, aatsr = aatsr, atsr2 = atsr2, famec = famec, clara2 = clara2, hector = hector
 
 	self.famec  = keyword_set(famec)
 	self.modis  = keyword_set(modis)
 	self.aatsr  = keyword_set(aatsr)
 	self.atsr2  = keyword_set(atsr2)
 	self.clara2 = keyword_set(clara2)
+	self.hector = keyword_set(hector)
 
 	; set dummies for startup
 	self.year       		= 2008L
@@ -459,20 +519,36 @@ FUNCTION ncdf_gewex::init, modis = modis, aatsr = aatsr, atsr2 = atsr2, famec = 
 	self.which_file 		= 'ampm'
 	self.nodes      		= ptr_new(['asc','desc'])
 	self.variables			= ptr_new('cmask')
-	self.file 				= PTR_NEW('no_file')
+	self.file 			= PTR_NEW('no_file')
 	; ---
 	; ncdf global attributes
-	self.climatology		= self.clara2 ? 'CLARA-A2' : 'ESA Cloud_cci'
-	self.contact    		= self.clara2 ? 'contact.cmsaf@dwd.de' : 'contact.cloudcci@dwd.de'
+	self.climatology		= 'ESA Cloud_cci' 
+	self.contact    		= 'contact.cloudcci@dwd.de'			;# added self.hector
 	self.institution		= 'Deutscher Wetterdienst'
-	; ---
-	self.algo       		= self.clara2 ? 'CLARA_A2' : 'ESACCI'	; string used in output filename
-	self.version    		= self.clara2 ? '002' : 'v2.0'  		; used in global attributes and file_search() !!
+	self.algo       		= 'ESACCI'					; string used in output filename
+	self.version    		= 'v2.0'  					; used in global attributes and file_search() !!
+	if self.clara2 then begin
+		self.climatology	= 'CLARA-A2' 
+		self.contact    	= 'contact.cmsaf@dwd.de'			;# added self.hector
+		self.institution	= 'Deutscher Wetterdienst'
+		self.algo       	= 'CLARA_A2'
+		self.version    	= '002'
+		self.default_var	= 'CMA'									; this is the path where the l2b files of clara will be searched
+	endif
+	if self.hector then begin
+		self.climatology	= 'HECTOR' 
+		self.contact    	= 'contact.cmsaf@dwd.de'			;# added self.hector
+		self.institution	= 'Deutscher Wetterdienst'
+		self.algo       	= 'HIRS-HECTOR'
+		self.version    	= '001'
+		self.default_var	= 'CMA'									; this is the path where the l2b files of clara will be searched
+	endif
+
 	self.missing_value 		= -999.									; Fillvalue used in output ncdfs
-	self.calc_spatial_stdd	= 0										; calculate spatial instead of temporal stdd. (default)
+	self.calc_spatial_stdd		= 0									; calculate spatial instead of temporal stdd. (default)
 	self.compress   		= 4 									; compress level for ncdf4 files [0-9]
 	self.resolution 		= 1. 									; output resolution in degree (equal angle)
-	self.clara_default_var	= 'CAA'									; this is the path where the l2b files of clara will be searched
+
 	; ---
 	; don't change this!!
 	self.which_file_list 	= ['ampm','am','pm','0130','0730','1330','1930']
@@ -484,9 +560,12 @@ FUNCTION ncdf_gewex::init, modis = modis, aatsr = aatsr, atsr2 = atsr2, famec = 
 	if self.famec  then apx_dir = 'FAMEC/'
 	if self.aatsr  then apx_dir = 'AATSR/'
 	if self.atsr2  then apx_dir = 'ATSR2/'
-	if self.clara2 then self.inpath = '/cmsaf/cmsaf-cld7/AVHRR_GAC_2/LEVEL2B/' $
+	if self.hector then self.inpath = '/cmsaf/cmsaf-cld8/HECTOR/BETA_withIASI/LEVEL2B/' $ 									;#!!!
+	else if self.clara2 then self.inpath = '/cmsaf/cmsaf-cld7/AVHRR_GAC_2/LEVEL2B/' $
 	else self.inpath = '/cmsaf/cmsaf-cld7/esa_cloud_cci/data/v2.0/L3U/'
-	self.outpath = '/cmsaf/cmsaf-cld7/esa_cloud_cci/data/v2.0/gewex/new/'+apx_dir
+; 	self.outpath = '/cmsaf/cmsaf-cld7/esa_cloud_cci/data/v2.0/gewex/new/'+apx_dir
+; 	self.outpath = '/cmsaf/cmsaf-cld8/GEWEX/GEWEX_final/'
+	self.outpath = '/cmsaf/cmsaf-cld8/GEWEX/HECTOR/'
 	; ---
 
 	; !Dont change anything here. Use below procedure "remove_from_lists" to remove products!
@@ -507,10 +586,18 @@ FUNCTION ncdf_gewex::init, modis = modis, aatsr = aatsr, atsr2 = atsr2, famec = 
 
 	; Remove products from the lists, e.g. CLARA-A2 has no CEM included
 	; removed products will not be processed!
-	if self.clara2 then self.exclude_from_lists,[	'CAE','CAEH','CAEM','CAEL','CAEW','CAEI','CAEIH',$
-													'CEM','CEMH','CEMM','CEML','CEMW','CEMI','CEMIH',$
-													'CEM_CP','CEMI_CREI']
-
+	if self.clara2 then self.exclude_from_lists,['CAE','CAEH','CAEM','CAEL','CAEW','CAEI','CAEIH',$
+								    'CEM','CEMH','CEMM','CEML','CEMW','CEMI','CEMIH',$
+								    'CT','CTH','CTM','CTL','CTW','CTI','CTIH',$
+								    'COD','CODH','CODM','CODL','CODW','CODI','CODIH',$
+								    'CODW_CREW','CODI_CREI','CEM_CP','CEMI_CREI']
+  
+	if self.hector then self.exclude_from_lists,['CAE','CAEH','CAEM','CAEL','CAEW','CAEI','CAEIH',$
+								    'CEM','CEMH','CEMM','CEML','CEMW','CEMI','CEMIH',$
+								    'CT','CTH','CTM','CTL','CTW','CTI','CTIH',$
+								    'COD','CODH','CODM','CODL','CODW','CODI','CODIH',$
+								    'CODW_CREW','CODI_CREI','CEM_CP','CEMI_CREI']
+  
 	self -> update
 
 	return,1
@@ -530,7 +617,7 @@ PRO  ncdf_gewex__define
 	  , inpath : '' $
 	  , fullpath : '' $
 	  , outpath : '' $
-	  , clara_default_var : '' $
+	  , default_var : '' $
 	  , nodes : ptr_new() $
 	  , result_path : '' $
 	  , outfile : '' $
@@ -553,6 +640,7 @@ PRO  ncdf_gewex__define
 	  , atsr2 : 0l $
 	  , famec : 0l $
 	  , clara2 : 0l $
+	  , hector : 0l $
 	  , sensor: '' $
 	  , key_ge : '' $
 	  , which : '' $
