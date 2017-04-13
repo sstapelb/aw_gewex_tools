@@ -1,7 +1,6 @@
 @aw_precompile.pro
 ;---------------------------------------------------------------------------------------------------------------------------------------
-pro start_aw_gewex, year, which = which, list = list, modis = modis, aatsr = aatsr, atsr2 = atsr2, famec = famec, clara2 = clara2
-
+pro start_aw_gewex, year, which = which, list = list, modis = modis, aatsr = aatsr, atsr2 = atsr2, famec = famec, clara2 = clara2, hector=hector
 	;# Requires IDL 8.3 or higher #
 	;# Make sure you have at least 10GB RAM available#
 
@@ -16,7 +15,7 @@ pro start_aw_gewex, year, which = which, list = list, modis = modis, aatsr = aat
 
 		print,'Start ncdf_gewex: '+strjoin(which,',')+' for '+strjoin(string(year_list,f='(i4.4)'),',')
 
-		obj = obj_new('ncdf_gewex', modis = modis, aatsr = aatsr, atsr2 = atsr2, famec = famec, clara2 = clara2)
+		obj = obj_new('ncdf_gewex', modis = modis, aatsr = aatsr, atsr2 = atsr2, famec = famec, clara2 = clara2, hector=hector)
 		for yy = 0, n_elements(year_list) -1 do begin
 			obj.set_year, year_list[yy]
 			for wh = 0,n_elements(which) -1 do begin
