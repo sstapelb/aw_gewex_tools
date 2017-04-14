@@ -15,9 +15,9 @@ FUNCTION ncdf_gewex::extract_all_data, file, node = node
 
 	nlon = long(360./self.resolution)
 	nlat = long(180./self.resolution)
-	MISSING = self.missing_value[0] 
+	MISSING = self.missing_value[0]
 
-	out  = orderedhash() ; orderedhash is important! CA needs to be created before all CAE prd
+	out = orderedhash() ; orderedhash is important! CA needs to be created before all CAE prd's
 
 	l2b_data = self.read_l2b_data(file, node = node, found = found_all)
 	if not found_all then begin
@@ -25,7 +25,7 @@ FUNCTION ncdf_gewex::extract_all_data, file, node = node
 		stop
 	endif
 
-	if l2b_data.haskey('CMASK') 	then ca    = l2b_data.remove('CMASK')
+	if l2b_data.haskey('CMASK') then ca    = l2b_data.remove('CMASK')
 	if l2b_data.haskey('CER')	then ref   = l2b_data.remove('CER')
 	if l2b_data.haskey('ILLUM')	then illum = l2b_data.remove('ILLUM')
 	if l2b_data.haskey('CTP')	then ctp   = l2b_data.remove('CTP')
@@ -35,7 +35,8 @@ FUNCTION ncdf_gewex::extract_all_data, file, node = node
 	if l2b_data.haskey('CWP')	then cwp   = l2b_data.remove('CWP')
 	if l2b_data.haskey('CPH')	then cph   = l2b_data.remove('CPH')
 	if l2b_data.haskey('CEE')	then cem   = l2b_data.remove('CEE')
-
+	if l2b_data.haskey('SZA')	then sol   = l2b_data.remove('SZA')
+	
 	; height levels as mask
 	if is_defined(ctp) then ctp_l = between(ctp,680.,1100.)
 	if is_defined(ctp) then ctp_m = between(ctp,440., 680.,/not_include_upper)
@@ -50,6 +51,7 @@ FUNCTION ncdf_gewex::extract_all_data, file, node = node
 	if total(proc_list eq 'CA') then begin
 		val  = ca ge 0.5
 		bad  = ca eq -999.
+if self.famec then bad = bad OR (sol gt 70.) ; für alle einfügen und testen, ist sol gt 70 anders als illum ne 1???
 		good = bad eq 0
 		data = val * good  + bad * MISSING
 		out['CA'] = data

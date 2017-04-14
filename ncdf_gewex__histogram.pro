@@ -68,7 +68,7 @@ PRO ncdf_gewex::histogram
 			file_cld = self.get_l2b_files(count = count_file)
 
 			FOR ff = 0, count_file -1 DO BEGIN
-				clock = tic(string(ff,f='(i3.3)')+' '+file_cld[ff])
+				if !version.release ge '8.3' then clock = tic(string(ff,f='(i3.3)')+' '+file_cld[ff])
 				for i_node = 0,count_nodes-1 do begin
 					; get variable hash
 					struc = self.read_l2b_data(file_cld[ff],variables = vars, found = found, node=nodes[i_node])
@@ -90,7 +90,7 @@ PRO ncdf_gewex::histogram
 						Endfor ; pp2
 					Endfor ; pp1
 				endfor ; nodes
-				toc, clock
+				if !version.release ge '8.3' then toc, clock
 			endfor ;files
 		ENDFOR ; months
 

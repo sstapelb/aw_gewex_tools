@@ -1,6 +1,7 @@
 @aw_precompile.pro
 ;---------------------------------------------------------------------------------------------------------------------------------------
 pro start_aw_gewex, year, which = which, list = list, modis = modis, aatsr = aatsr, atsr2 = atsr2, famec = famec, clara2 = clara2, hector=hector
+
 	;# Requires IDL 8.3 or higher #
 	;# Make sure you have at least 10GB RAM available#
 
@@ -19,12 +20,12 @@ pro start_aw_gewex, year, which = which, list = list, modis = modis, aatsr = aat
 		for yy = 0, n_elements(year_list) -1 do begin
 			obj.set_year, year_list[yy]
 			for wh = 0,n_elements(which) -1 do begin
-				clock = TIC('"which = ' + which[wh]+'"')
+ 				if !version.release ge '8.3' then clock = TIC('"which = ' + which[wh]+'"')
 				obj.set_which, which[wh]
-				obj.create_l3_all
-				obj.create_rel
-				obj.histogram
-				TOC, clock
+; 				obj.create_l3_all
+; 				obj.create_rel
+; 				obj.histogram
+ 				if !version.release ge '8.3' then TOC, clock
 			endfor
 		endfor
 		obj_destroy, obj

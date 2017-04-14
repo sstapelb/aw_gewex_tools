@@ -26,18 +26,18 @@ FUNCTION ncdf_gewex::get_all_data, month
 
 	day_mean  = hash()
 	day_hist  = hash()
-; 	day_vari  = hash()
+	if use_sp_var then day_vari  = hash()
 	ca_avg    = 1
 	i_count   = 0
 
 	for i_file = 0 , count_file -1 do begin
-		clock = tic(string(i_file,f='(i3.3)')+' '+(*self.file)[i_file])
+		if !version.release ge '8.3' then clock = tic(string(i_file,f='(i3.3)')+' '+(*self.file)[i_file])
 		for i_node = 0,count_nodes-1 do begin ; loop over nodes
 
 			; read data from level 2b files
 			data_hash = self-> extract_all_data((*self.file)[i_file],node = nodes[i_node])
 			prd_list  = data_hash.keys()
-
+ 
 			foreach prd, prd_list do begin
 
 				data  = data_hash.remove(prd)
@@ -119,7 +119,7 @@ FUNCTION ncdf_gewex::get_all_data, month
 			undefine,data_hash
 			i_count++
 		endfor ; ; loop over i nodes
- 		toc, clock
+ 		if !version.release ge '8.3' then toc, clock
 	endfor ; loop over i files l2b
 
 	out_hash = hash()
