@@ -380,20 +380,20 @@ PRO ncdf_gewex::update
 		'0730':	begin  ; daylight node for the am sats!  (stapel (12/2014))
 					satellite[1] = 'nnn'
 					which_string = '_NOAA_0730AM_'
-					if self.famec then	which_string = '_ENVISAT_1030AM_'	else $
-					if self.atsr2 then 	which_string = '_ERS2_1030AM_'		else $
-					if self.aatsr then 	which_string = '_ENVISAT_1030AM_'	else $
-					if self.modis then 	which_string = '_TERRA_1030AM_'		else $
+					if self.famec then	which_string = '_ENVISAT_1030AM_'
+					if self.atsr2 then 	which_string = '_ERS2_1030AM_'
+					if self.aatsr then 	which_string = '_ENVISAT_1030AM_'
+					if self.modis then 	which_string = '_TERRA_1030AM_'
 					self -> update_node, 'desc' ; for the pm sats 'desc' should always be the daylight node! (stapel (12/2014))
 				end
 		'1930':	begin  ; night node for the am sats!  (stapel (12/2014))
 					satellite[1] = 'nnn'
 					self.process_day_prds = 0l
 					which_string = '_NOAA_0730PM_'
-					if self.famec then	which_string = '_ENVISAT_1030PM_'	else $
-					if self.atsr2 then	which_string = '_ERS2_1030PM_'		else $
-					if self.aatsr then	which_string = '_ENVISAT_1030PM_'	else $
-					if self.modis then	which_string = '_TERRA_1030PM_'		else $
+					if self.famec then	which_string = '_ENVISAT_1030PM_'
+					if self.atsr2 then	which_string = '_ERS2_1030PM_'
+					if self.aatsr then	which_string = '_ENVISAT_1030PM_'
+					if self.modis then	which_string = '_TERRA_1030PM_'
 					self -> update_node, 'asc' ; for the pm sats 'asc' should always be the night node! (stapel (12/2014))
 				end
 	ENDCASE
@@ -477,7 +477,7 @@ FUNCTION ncdf_gewex::init, modis = modis, aatsr = aatsr, atsr2 = atsr2, famec = 
 		self.institution	= 'Deutscher Wetterdienst'
 		self.algo       	= 'HECTOR'
 		self.version    	= '001'
-		self.CMSAF_PATH		= 'CMA'
+		self.CMSAF_PATH		= 'CMA'							; this path will be searched for l2b files, only necassary for CMSAF files
 	endif
 
 	self.missing_value 		= -999.							; Fillvalue used in output ncdfs
