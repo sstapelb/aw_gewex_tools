@@ -329,6 +329,7 @@ end
 PRO ncdf_gewex::update
 
 	self-> update_year
+	self-> update_product
 	; stapel (12/2014) introduced self->update_nodes 
 	; Here is my interpretation:
 	; e.g., in 2007-2009
