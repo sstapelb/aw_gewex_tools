@@ -28,7 +28,6 @@ pro ncdf_gewex::get_git_hash
 			self.git_commit_hash = commit_hash
 		endif
 	endif
-	stop
 	;---
 end
 ;-------------------------------------------------------------------------
