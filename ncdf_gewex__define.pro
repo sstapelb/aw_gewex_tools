@@ -1,5 +1,38 @@
 ;+
 ; :Description:
+;    spawns the last commit HASH number of the git repository if available
+;    
+;
+; :Purpose:
+;    the hash will be written to the history global attribute
+;
+; :Keywords:
+;    none
+;
+;
+; :Author: sstapelberg
+;-
+;-------------------------------------------------------------------------
+pro ncdf_gewex::get_git_hash
+
+	; check if git is installed on your computer
+	if file_test(file_which(getenv('PATH'),'git')) then begin
+		; find parent directory of the gewex program code via traceback
+		help,/traceback,output=out
+		gwx_prog_path = file_dirname((reverse(strsplit(out[0],/ext)))[0])
+		; if its a valid directory spawn the git command to get the latest commit hash
+		if file_test(gwx_prog_path,/directory) then begin
+			cd, gwx_prog_path, current = current_dir
+			spawn,['git','rev-parse','HEAD'], commit_hash, ERROR, /NOSHELL
+			cd, current_dir
+			self.git_commit_hash = commit_hash
+		endif
+	endif
+	;---
+end
+;-------------------------------------------------------------------------
+;+
+; :Description:
 ;    Creates hash of varnames as used in the l2b file (varies on algoritms),
 ;    depending on which Gewex products shall be processed.
 ;
@@ -538,6 +571,8 @@ FUNCTION ncdf_gewex::init, modis = modis, aatsr = aatsr, atsr2 = atsr2, famec = 
 												 'CLWP','CIWP','CIWPH','CREW','CREI','CREIH'		, $
 												 'CAD','CAWD','CAID','CAWR','CAIR','CAIHR','CAWDR'	, $
 												 'CAIDR','COD_CP','CEMI_CREI','CODW_CREW','CODI_CREI']
+
+	self -> get_git_hash
 	self -> update
 
 	return,1
@@ -571,6 +606,7 @@ PRO  ncdf_gewex__define
 	  , climatology : '' $ 
 	  , contact : '' $ 
 	  , institution : '' $ 
+	  , git_commit_hash : '' $
 	  , missing_value : 0. $
 	  , compress : 0l $
 	  , process_day_prds : 1l $
