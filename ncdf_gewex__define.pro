@@ -28,12 +28,13 @@ pro ncdf_gewex::get_git_hash
 			self.git_commit_hash = commit_hash
 		endif
 	endif
+	stop
 	;---
 end
 ;-------------------------------------------------------------------------
 ;+
 ; :Description:
-;    Creates hash of varnames as used in the l2b file (varies on algoritms),
+;    Creates hash of varnames as used in the l2b file (varies between algorithms),
 ;    depending on which Gewex products shall be processed.
 ;
 ; :Purpose:
@@ -84,6 +85,12 @@ function ncdf_gewex::get_l2b_varnames, product_list, found = found
 							 'CODI','CODIH']) and (vars.haskey('ILLUM') eq 0)		then vars['ILLUM'] = {var:'illum',path:'',unit_scale:1.0}
 		endif
 	endforeach
+
+	if self.use_cci_corrected_heights then begin
+		if vars.haskey('CTP')	then vars['CTP']	= {var:'ctp_corrected',path:'',unit_scale:1.0}
+		if vars.haskey('CTH')	then vars['CTH']	= {var:'cth_corrected',path:'',unit_scale:1.0}
+		if vars.haskey('CTT')	then vars['CTT']	= {var:'ctt_corrected',path:'',unit_scale:1.0}
+	endif
 
 	if self.clara2 then begin
 		if vars.haskey('CER')	then vars['CER']	= {var:'ref',path:'CWP',unit_scale:1000000.0}
@@ -488,6 +495,9 @@ FUNCTION ncdf_gewex::init, modis = modis, aatsr = aatsr, atsr2 = atsr2, famec = 
 	self.atsr2  = keyword_set(atsr2)
 	self.clara2 = keyword_set(clara2)
 	self.hector = keyword_set(hector)
+
+	self.use_cci_corrected_heights = 0						; CC4CL only, use corrected heights, e.g., "ctp_corrected" instead of "ctp"  
+
 	self-> set_sensor
 
 	; ncdf global attributes, change here
@@ -617,6 +627,7 @@ PRO  ncdf_gewex__define
 	  , clara2 : 0l $
 	  , hector : 0l $
 	  , meris : 0l $
+	  , use_cci_corrected_heights : 0l $
 	  , sensor: '' $
 	  , which : '' $
 	  , calc_spatial_stdd : 0 $
